@@ -2,80 +2,85 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Diabetes AI Pro - Auto Segment</title>
+    <title>GlucoScan Pro - High Sensitivity</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #020617; color: #f8fafc; }
-        #canvas-container { position: relative; width: 100%; aspect-ratio: 1; }
-        canvas { position: absolute; top: 0; left: 0; width: 100%; h-full; border-radius: 2rem; }
-        .loading-overlay { background: rgba(0,0,0,0.8); backdrop-blur: 5px; }
+        body { font-family: 'Outfit', sans-serif; background-color: #0f172a; color: #f1f5f9; }
+        .scanning-line {
+            height: 2px;
+            background: #3b82f6;
+            box-shadow: 0 0 15px #3b82f6;
+            position: absolute;
+            width: 100%;
+            animation: scan 2s infinite linear;
+        }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
     </style>
 </head>
-<body class="p-4 pb-20">
+<body class="p-4 pb-24">
 
     <div class="max-w-md mx-auto space-y-4">
-        <header class="flex justify-between items-center bg-slate-900/50 p-4 rounded-3xl border border-slate-800">
+        <header class="flex justify-between items-center bg-slate-900 p-4 rounded-3xl border border-slate-800">
             <div>
-                <h1 class="text-xl font-black text-blue-500 italic">AUTO<span class="text-white">SCAN</span></h1>
-                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Ratio: 7.5 | DTI: 54</p>
+                <h1 class="text-xl font-black text-blue-500 tracking-tighter italic">GLUCO<span class="text-white">SCAN</span></h1>
+                <p class="text-[9px] text-slate-500 font-bold uppercase">Motor: MobileNetV2 (High Res)</p>
             </div>
-            <div id="ai-status" class="text-[9px] bg-amber-500/20 text-amber-500 px-2 py-1 rounded border border-amber-500/30 font-bold">CARGANDO IA...</div>
+            <div id="ai-status" class="bg-blue-500/10 text-blue-500 px-3 py-1 rounded-full text-[10px] font-black border border-blue-500/20">CARGANDO MOTOR...</div>
         </header>
 
-        <div id="canvas-container" class="bg-black rounded-[2.5rem] overflow-hidden border-2 border-slate-800 shadow-2xl">
-            <video id="video" autoplay playsinline class="w-full h-full object-cover opacity-50"></video>
-            <canvas id="canvas"></canvas>
+        <div class="relative aspect-square bg-black rounded-[2.5rem] overflow-hidden border-2 border-slate-800">
+            <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
+            <div id="scanner" class="hidden absolute inset-0">
+                <div class="scanning-line"></div>
+            </div>
+            <canvas id="canvas" class="hidden absolute inset-0 w-full h-full object-cover"></canvas>
             
-            <button id="main-btn" onclick="captureAndDetect()" class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white text-slate-900 px-8 py-4 rounded-2xl font-black shadow-2xl active:scale-95 transition-all z-30">
-                🔍 ANALIZAR PLATO
+            <button id="btn-main" onclick="analizarAhora()" class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-blue-600 px-10 py-4 rounded-2xl font-black text-white shadow-2xl active:scale-90 transition-all z-20">
+                RECONOCER PLATO
             </button>
         </div>
 
-        <div id="hint" class="hidden text-center text-blue-400 text-[10px] font-bold uppercase animate-bounce">
-            ¿Falta algo? Toca la foto para añadirlo manualmente
-        </div>
-
-        <div class="bg-slate-900 p-6 rounded-[2.5rem] border border-slate-800">
-            <div id="food-list" class="space-y-3 min-h-[60px]">
-                <p class="text-slate-600 text-sm italic text-center">Apunta al plato para empezar</p>
+        <div class="bg-slate-900 p-5 rounded-[2rem] border border-slate-800">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Alimentos Detectados</h3>
+                <button onclick="abrirManual()" class="text-blue-500 text-[10px] font-black uppercase">+ Añadir Manual</button>
             </div>
-            <div class="mt-6 pt-4 border-t border-slate-800 flex justify-between items-end">
-                <div>
-                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Total Hidratos</span>
-                    <div id="total-hc" class="text-4xl font-black">0g</div>
-                </div>
-                <div id="dual-alert" class="hidden text-right bg-orange-500/10 p-2 rounded-xl border border-orange-500/30">
-                    <span class="text-[9px] text-orange-500 font-black uppercase">⚠️ Bolo Dual</span>
-                </div>
+            <div id="plato-lista" class="space-y-2 min-h-[60px]">
+                <p class="text-slate-600 text-xs italic text-center py-4">Apunta a la comida y pulsa el botón azul</p>
+            </div>
+            <div class="mt-4 pt-4 border-t border-slate-800 flex justify-between items-center">
+                <span class="text-sm font-bold text-slate-400">Total HC:</span>
+                <span id="total-hc" class="text-3xl font-black text-white">0g</span>
             </div>
         </div>
 
-        <div class="bg-blue-600 p-6 rounded-[3rem] shadow-xl">
-            <div class="flex gap-3">
-                <input type="number" id="glucemia" placeholder="mg/dL" class="w-full bg-blue-700 border-none rounded-2xl p-4 text-2xl font-bold text-white placeholder-blue-300 outline-none">
-                <button onclick="calcularDosisFinal()" class="bg-white text-blue-600 px-6 rounded-2xl font-black text-xs uppercase">Bolo</button>
+        <div class="bg-blue-600 p-6 rounded-[2.5rem] shadow-xl">
+            <div class="flex gap-4">
+                <input type="number" id="glucemia" placeholder="Glucemia" class="w-full bg-blue-700 border-none rounded-2xl p-4 text-xl font-bold text-white placeholder-blue-300 outline-none">
+                <button onclick="calcularDosis()" class="bg-white text-blue-600 px-6 rounded-2xl font-black text-[10px] uppercase">Calcular Bolo</button>
             </div>
         </div>
     </div>
 
-    <div id="manual-modal" class="hidden fixed inset-0 z-50 bg-black/95 p-6 overflow-y-auto">
-        <h2 class="text-white font-black text-center mb-6">INSERTAR MANUALMENTE</h2>
+    <div id="modal-manual" class="hidden fixed inset-0 z-50 bg-slate-950/95 p-6 overflow-y-auto">
+        <h2 class="text-white font-black text-center mb-6 tracking-widest">AÑADIR MANUALMENTE</h2>
         <div id="manual-grid" class="grid grid-cols-2 gap-3"></div>
-        <button onclick="document.getElementById('manual-modal').classList.add('hidden')" class="w-full mt-8 bg-slate-800 py-4 rounded-xl font-bold">CANCELAR</button>
+        <button onclick="cerrarManual()" class="w-full mt-8 bg-slate-800 py-4 rounded-xl font-black text-xs">VOLVER</button>
     </div>
 
-    <div id="result-modal" class="hidden fixed inset-0 z-50 bg-slate-950 flex items-center justify-center p-6">
-        <div class="bg-slate-900 border border-slate-800 w-full rounded-[3rem] p-10 text-center">
-            <p class="text-slate-500 text-[10px] font-bold uppercase mb-4">Dosis Sugerida (Ratio 7.5)</p>
-            <div id="dose-now" class="text-8xl font-black text-white leading-none">0.0</div>
-            <div id="dose-delay" class="hidden mt-6 pt-6 border-t border-slate-800">
-                <p class="text-blue-400 text-[10px] font-bold uppercase">En 2 horas (Bolo Dual)</p>
-                <div id="dose-delay-val" class="text-4xl font-black text-blue-400">0.0</div>
+    <div id="modal-res" class="hidden fixed inset-0 z-50 bg-slate-950/98 flex items-center justify-center p-6">
+        <div class="bg-slate-900 border border-slate-800 w-full rounded-[3rem] p-10 text-center shadow-2xl">
+            <p id="dual-label" class="hidden text-orange-500 text-[10px] font-black uppercase mb-2">⚠️ Bolo Dual Sugerido</p>
+            <p class="text-slate-500 text-[10px] font-black uppercase mb-4">Dosis de Insulina</p>
+            <div id="res-now" class="text-9xl font-black text-white leading-none">0.0</div>
+            <div id="dual-sec" class="hidden mt-6 pt-6 border-t border-slate-800">
+                <p class="text-blue-500 text-[10px] font-black uppercase">En 2 horas (30%)</p>
+                <div id="res-later" class="text-4xl font-black text-blue-400">0.0</div>
             </div>
-            <button onclick="location.reload()" class="w-full mt-10 bg-blue-600 py-4 rounded-2xl font-black">NUEVO ESCANEO</button>
+            <button onclick="location.reload()" class="w-full mt-10 bg-blue-600 py-4 rounded-2xl font-black uppercase">Cerrar</button>
         </div>
     </div>
 
@@ -84,127 +89,128 @@
         const FSI = 33.3;
         const OBJ = 120;
         
-        let model;
-        let video = document.getElementById('video');
-        let canvas = document.getElementById('canvas');
-        let ctx = canvas.getContext('2d');
-        let currentPlato = [];
+        let classifier;
+        let platoActual = [];
 
-        // DB con mapeo de COCO-SSD e IG
-        const FOOD_DB = {
-            "pizza": { esp: "Pizza", hc: 65, ig: "Alto", dual: true, icon: "🍕" },
-            "sandwich": { esp: "Sandwich/Burguer", hc: 45, ig: "Medio", dual: true, icon: "🍔" },
-            "apple": { esp: "Manzana", hc: 15, ig: "Bajo", dual: false, icon: "🍎" },
-            "orange": { esp: "Naranja", hc: 12, ig: "Bajo", dual: false, icon: "🍊" },
-            "banana": { esp: "Plátano", hc: 22, ig: "Medio", dual: false, icon: "🍌" },
-            "cake": { esp: "Tarta/Dulce", hc: 50, ig: "Alto", dual: true, icon: "🍰" },
-            "hot dog": { esp: "Perrito Caliente", hc: 35, ig: "Alto", dual: true, icon: "🌭" },
-            "broccoli": { esp: "Verdura", hc: 5, ig: "Bajo", dual: false, icon: "🥦" },
-            "spaghetti": { esp: "Espaguetis", hc: 55, ig: "Medio", dual: true, icon: "🍝" },
-            "rice": { esp: "Arroz", hc: 45, ig: "Alto", dual: false, icon: "🍚" },
-            "steak": { esp: "Carne/Lomo", hc: 0, ig: "Bajo", dual: false, icon: "🥩" }
+        // Base de datos extendida con sinónimos que usa la IA
+        const DB = {
+            "carbonara": { esp: "Pasta / Espaguetis", hc: 55, dual: true, icon: "🍝" },
+            "spaghetti": { esp: "Espaguetis", hc: 55, dual: true, icon: "🍝" },
+            "pizza": { esp: "Pizza", hc: 65, dual: true, icon: "🍕" },
+            "potatoes": { esp: "Patatas Fritas", hc: 40, dual: true, icon: "🍟" },
+            "french fries": { esp: "Patatas Fritas", hc: 45, dual: true, icon: "🍟" },
+            "rice": { esp: "Arroz Blanco", hc: 45, dual: false, icon: "🍚" },
+            "hamburger": { esp: "Hamburguesa", hc: 45, dual: true, icon: "🍔" },
+            "sandwich": { esp: "Sandwich / Pan", hc: 30, dual: false, icon: "🍞" },
+            "meat": { esp: "Carne / Proteína", hc: 0, dual: false, icon: "🥩" },
+            "steak": { esp: "Lomo / Filete", hc: 0, dual: false, icon: "🥩" },
+            "chicken": { esp: "Pollo", hc: 0, dual: false, icon: "🍗" },
+            "salad": { esp: "Ensalada / Verdura", hc: 5, dual: false, icon: "🥗" },
+            "apple": { esp: "Fruta", hc: 15, dual: false, icon: "🍎" }
         };
 
         async function init() {
-            model = await cocoSsd.load();
-            document.getElementById('ai-status').innerText = "IA LISTA";
-            document.getElementById('ai-status').className = "text-[9px] bg-green-500/20 text-green-500 px-2 py-1 rounded border border-green-500/30 font-bold";
+            classifier = await mobilenet.load();
+            document.getElementById('ai-status').innerText = "IA ACTIVA";
+            document.getElementById('ai-status').className = "bg-green-500/10 text-green-500 px-3 py-1 rounded-full text-[10px] font-black border border-green-500/20";
             
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            video.srcObject = stream;
+            document.getElementById('video').srcObject = stream;
             
-            // Llenar grid manual
+            // Cargar grid manual
             const grid = document.getElementById('manual-grid');
-            for(let key in FOOD_DB) {
-                grid.innerHTML += `<button onclick="addFood('${key}')" class="bg-slate-800 p-4 rounded-2xl flex flex-col items-center">
-                    <span class="text-2xl">${FOOD_DB[key].icon}</span>
-                    <span class="text-[10px] font-bold mt-2 uppercase">${FOOD_DB[key].esp}</span>
+            for(let k in DB) {
+                grid.innerHTML += `<button onclick="añadir('${k}')" class="bg-slate-800 p-4 rounded-2xl flex flex-col items-center border border-slate-700">
+                    <span class="text-2xl">${DB[k].icon}</span>
+                    <span class="text-[9px] font-black uppercase mt-2 text-center">${DB[k].esp}</span>
                 </button>`;
             }
         }
 
-        async function captureAndDetect() {
-            // Congelar imagen
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0);
-            video.style.display = 'none';
+        async function analizarAhora() {
+            const video = document.getElementById('video');
+            const scanner = document.getElementById('scanner');
+            scanner.classList.remove('hidden');
             
-            // Detectar
-            const predictions = await model.detect(canvas);
+            // La IA analiza la imagen
+            const results = await classifier.classify(video);
+            scanner.classList.add('hidden');
             
-            currentPlato = [];
-            predictions.forEach(pred => {
-                // Si la IA detecta algo que está en nuestra DB de comida
-                if (FOOD_DB[pred.class]) {
-                    currentPlato.push({...FOOD_DB[pred.class], uid: Date.now() + Math.random()});
-                    drawBox(pred.bbox, FOOD_DB[pred.class].esp);
+            console.log("IA detectó:", results); // Para debug en consola
+
+            let detectado = false;
+            // Recorremos los 3 primeros resultados de la IA
+            for(let res of results) {
+                const terminos = res.className.toLowerCase();
+                for(let key in DB) {
+                    if(terminos.includes(key)) {
+                        añadir(key);
+                        detectado = true;
+                        break; 
+                    }
                 }
-            });
+                if(detectado) break;
+            }
 
-            updateUI();
-            document.getElementById('main-btn').style.display = 'none';
-            document.getElementById('hint').classList.remove('hidden');
+            if(!detectado) {
+                alert("La IA no está segura. Por favor, selecciona el alimento manualmente.");
+                abrirManual();
+            }
         }
 
-        function drawBox(bbox, label) {
-            ctx.strokeStyle = "#3b82f6";
-            ctx.lineWidth = 4;
-            ctx.strokeRect(...bbox);
-            ctx.fillStyle = "#3b82f6";
-            ctx.font = "bold 20px Outfit";
-            ctx.fillText(label.toUpperCase(), bbox[0], bbox[1] > 20 ? bbox[1] - 10 : 20);
+        function añadir(key) {
+            platoActual.push({...DB[key], uid: Date.now()});
+            cerrarManual();
+            renderPlato();
         }
 
-        // Click en canvas para manual
-        canvas.addEventListener('click', () => {
-            document.getElementById('manual-modal').classList.remove('hidden');
-        });
-
-        function addFood(key) {
-            currentPlato.push({...FOOD_DB[key], uid: Date.now()});
-            document.getElementById('manual-modal').classList.add('hidden');
-            updateUI();
-        }
-
-        function updateUI() {
-            const list = document.getElementById('food-list');
+        function renderPlato() {
+            const lista = document.getElementById('plato-lista');
             let total = 0;
-            let needsDual = false;
-            list.innerHTML = "";
-
-            currentPlato.forEach(item => {
-                total += item.hc;
-                if(item.dual) needsDual = true;
-                list.innerHTML += `
+            lista.innerHTML = "";
+            
+            platoActual.forEach(i => {
+                total += i.hc;
+                lista.innerHTML += `
                     <div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-xl border-l-4 border-blue-500">
-                        <span class="text-xs font-bold uppercase">${item.icon} ${item.esp} (IG ${item.ig})</span>
-                        <span class="font-black text-blue-400">${item.hc}g</span>
+                        <span class="text-xs font-bold uppercase">${i.icon} ${i.esp}</span>
+                        <div class="flex items-center gap-3">
+                            <span class="font-black text-blue-400">${i.hc}g</span>
+                            <button onclick="quitar(${i.uid})" class="text-slate-600">✕</button>
+                        </div>
                     </div>`;
             });
-
             document.getElementById('total-hc').innerText = total + "g";
-            document.getElementById('dual-alert').style.display = needsDual ? 'block' : 'none';
-            window.lastTotalHC = total;
-            window.lastDual = needsDual;
+            window.lastHC = total;
         }
 
-        function calcularDosisFinal() {
+        function quitar(uid) {
+            platoActual = platoActual.filter(i => i.uid !== uid);
+            renderPlato();
+        }
+
+        function calcularDosis() {
             const glu = parseFloat(document.getElementById('glucemia').value);
-            if(!glu) return alert("Introduce glucemia");
+            if(!glu) return alert("Pon tu azúcar");
 
-            const dose = window.lastTotalHC / RATIO + (glu > OBJ ? (glu - OBJ)/FSI : 0);
-            
-            if(window.lastDual && dose > 2) {
-                document.getElementById('dose-now').innerText = (Math.round((dose * 0.7) * 2) / 2).toFixed(1);
-                document.getElementById('dose-delay').classList.remove('hidden');
-                document.getElementById('dose-delay-val').innerText = (Math.round((dose * 0.3) * 2) / 2).toFixed(1);
+            const dose = (window.lastHC / RATIO) + (glu > OBJ ? (glu - OBJ)/FSI : 0);
+            const dual = platoActual.some(i => i.dual);
+
+            if(dual && dose > 2.5) {
+                document.getElementById('dual-label').classList.remove('hidden');
+                document.getElementById('dual-sec').classList.remove('hidden');
+                document.getElementById('res-now').innerText = (Math.round((dose * 0.7) * 2) / 2).toFixed(1);
+                document.getElementById('res-later').innerText = (Math.round((dose * 0.3) * 2) / 2).toFixed(1);
             } else {
-                document.getElementById('dose-now').innerText = (Math.round(dose * 2) / 2).toFixed(1);
-                document.getElementById('dose-delay').classList.add('hidden');
+                document.getElementById('dual-label').classList.add('hidden');
+                document.getElementById('dual-sec').classList.add('hidden');
+                document.getElementById('res-now').innerText = (Math.round(dose * 2) / 2).toFixed(1);
             }
-            document.getElementById('result-modal').classList.remove('hidden');
+            document.getElementById('modal-res').classList.remove('hidden');
         }
+
+        function abrirManual() { document.getElementById('modal-manual').classList.remove('hidden'); }
+        function cerrarManual() { document.getElementById('modal-manual').classList.add('hidden'); }
 
         init();
     </script>
