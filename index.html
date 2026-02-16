@@ -3,207 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diabetes AI - Resumen en Castellano</title>
+    <title>Diabetes AI Pro - Base de Datos</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Lexend', sans-serif; background-color: #0f172a; color: #f8fafc; }
-        .canvas-overlay { position: absolute; top: 0; left: 0; z-index: 10; pointer-events: none; }
-        .food-card { animation: slideIn 0.3s ease-out; }
-        @keyframes slideIn { from { transform: translateX(-10px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        body { font-family: 'Outfit', sans-serif; background-color: #0f172a; color: #f1f5f9; }
+        .cat-btn { transition: all 0.2s; }
+        .cat-btn:active { transform: scale(0.95); }
+        .item-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
     </style>
 </head>
-<body class="min-h-screen pb-10">
+<body class="p-4 pb-32">
 
-    <div class="max-w-md mx-auto p-4 space-y-6">
-        
-        <header class="flex justify-between items-center bg-slate-800/50 p-4 rounded-3xl border border-slate-700">
-            <div>
-                <h1 class="text-xl font-black text-blue-400">ASISTENTE <span class="text-white">DIABETES</span></h1>
-                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Motor de Segmentación V2</p>
-            </div>
-            <div class="text-right">
-                <span class="block text-[10px] text-slate-400 font-bold">DTI 54</span>
-                <span class="text-xs bg-blue-600 px-2 py-0.5 rounded-full font-bold">0.5 UI</span>
-            </div>
+    <div class="max-w-md mx-auto space-y-6">
+        <header class="text-center py-4">
+            <h1 class="text-3xl font-black text-blue-500 italic">GLUCO<span class="text-white">PRO</span></h1>
+            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-[0.3em]">Selector Multicomponente</p>
         </header>
 
-        <div class="relative w-full aspect-square bg-black rounded-[2.5rem] overflow-hidden border-4 border-slate-800 shadow-2xl">
-            <video id="video" autoplay playsinline class="w-full h-full object-cover opacity-80"></video>
-            <canvas id="canvas" class="canvas-overlay"></canvas>
+        <div class="bg-slate-900 p-4 rounded-3xl border border-slate-800">
+            <h2 class="text-xs font-bold text-blue-400 uppercase mb-4 tracking-tighter">Añadir al Plato:</h2>
             
-            <button onclick="segmentarPlato()" class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white text-slate-900 px-8 py-4 rounded-2xl font-black text-sm shadow-2xl active:scale-95 transition-all flex items-center gap-2">
-                <span>📸 ANALIZAR PLATO</span>
-            </button>
+            <div class="space-y-3">
+                <details class="group bg-slate-800 rounded-2xl overflow-hidden">
+                    <summary class="list-none p-4 font-bold flex justify-between items-center cursor-pointer">
+                        <span>🍚 Arroces y Pastas</span>
+                        <span class="text-blue-500">+</span>
+                    </summary>
+                    <div class="p-4 pt-0 item-grid">
+                        <button onclick="add(50, 'Arroz Blanco')" class="bg-slate-700 p-3 rounded-xl text-xs">Arroz Blanco (50g)</button>
+                        <button onclick="add(60, 'Paella/Mixto')" class="bg-slate-700 p-3 rounded-xl text-xs">Paella/Mixto (60g)</button>
+                        <button onclick="add(60, 'Pasta/Spaguetti')" class="bg-slate-700 p-3 rounded-xl text-xs">Pasta Sencilla (60g)</button>
+                        <button onclick="add(70, 'Lasaña/Canelón')" class="bg-slate-700 p-3 rounded-xl text-xs">Lasaña (70g)</button>
+                        <button onclick="add(45, 'Cuscús/Quinoa')" class="bg-slate-700 p-3 rounded-xl text-xs">Quinoa/Cuscús (45g)</button>
+                    </div>
+                </details>
+
+                <details class="group bg-slate-800 rounded-2xl overflow-hidden">
+                    <summary class="list-none p-4 font-bold flex justify-between items-center cursor-pointer">
+                        <span>🍟 Patatas y Legumbres</span>
+                        <span class="text-blue-500">+</span>
+                    </summary>
+                    <div class="p-4 pt-0 item-grid">
+                        <button onclick="add(40, 'Patatas Fritas')" class="bg-slate-700 p-3 rounded-xl text-xs">Fritas (40g)</button>
+                        <button onclick="add(30, 'Patata Asada')" class="bg-slate-700 p-3 rounded-xl text-xs">Asada/Cocida (30g)</button>
+                        <button onclick="add(25, 'Lentejas/Guiso')" class="bg-slate-700 p-3 rounded-xl text-xs">Lentejas (25g)</button>
+                        <button onclick="add(30, 'Garbanzos')" class="bg-slate-700 p-3 rounded-xl text-xs">Garbanzos (30g)</button>
+                    </div>
+                </details>
+
+                <details class="group bg-slate-800 rounded-2xl overflow-hidden">
+                    <summary class="list-none p-4 font-bold flex justify-between items-center cursor-pointer">
+                        <span>🍔 Pan y Fast Food</span>
+                        <span class="text-blue-500">+</span>
+                    </summary>
+                    <div class="p-4 pt-0 item-grid">
+                        <button onclick="add(25, 'Pan Blanco')" class="bg-slate-700 p-3 rounded-xl text-xs">Pan (1 rebanada)</button>
+                        <button onclick="add(45, 'Pan Burger/Hotdog')" class="bg-slate-700 p-3 rounded-xl text-xs">Pan Burger (45g)</button>
+                        <button onclick="add(50, 'Pizza')" class="bg-slate-700 p-3 rounded-xl text-xs">Pizza (1 ración)</button>
+                        <button onclick="add(30, 'Nuggets (6u)')" class="bg-slate-700 p-3 rounded-xl text-xs">Nuggets (30g)</button>
+                    </div>
+                </details>
+
+                <details class="group bg-slate-800 rounded-2xl overflow-hidden border border-blue-500/20">
+                    <summary class="list-none p-4 font-bold flex justify-between items-center cursor-pointer text-blue-400">
+                        <span>🥩 Carnes/Pescado (0g)</span>
+                        <span>+</span>
+                    </summary>
+                    <div class="p-4 pt-0 item-grid">
+                        <button onclick="add(0, 'Carne/Lomo')" class="bg-slate-700 p-3 rounded-xl text-xs">Filete/Lomo</button>
+                        <button onclick="add(0, 'Pollo Asado')" class="bg-slate-700 p-3 rounded-xl text-xs">Pollo</button>
+                        <button onclick="add(0, 'Pescado')" class="bg-slate-700 p-3 rounded-xl text-xs">Pescado</button>
+                        <button onclick="add(0, 'Huevos')" class="bg-slate-700 p-3 rounded-xl text-xs">Huevos</button>
+                    </div>
+                </details>
+            </div>
         </div>
 
-        <div class="bg-slate-800 p-6 rounded-[2rem] border border-slate-700 shadow-xl">
-            <h2 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                🍴 Resumen del Menú
-            </h2>
-            <div id="lista-resumen" class="space-y-3">
-                <p class="text-slate-500 italic text-sm text-center py-4">Pulsa el botón para identificar los alimentos...</p>
+        <div id="plato-container" class="bg-slate-900 p-6 rounded-[2.5rem] border border-slate-800">
+            <h3 class="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-widest">Contenido del Plato</h3>
+            <div id="lista-plato" class="space-y-2 mb-6 text-sm">
+                <p class="text-slate-600 italic">No hay alimentos seleccionados</p>
             </div>
-            
-            <div class="mt-6 pt-4 border-t border-slate-700 flex justify-between items-end">
-                <div>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase">Total Hidratos</p>
-                    <p id="total-hc" class="text-4xl font-black text-white">0<span class="text-lg text-slate-500 ml-1">g</span></p>
-                </div>
-                <div class="text-right">
-                    <p class="text-[10px] text-slate-500 font-bold uppercase">Raciones</p>
-                    <p id="total-raciones" class="text-2xl font-black text-blue-400">0.0</p>
-                </div>
+            <div class="flex justify-between items-center border-t border-slate-800 pt-4">
+                <span class="font-bold text-slate-400">Total HC:</span>
+                <span id="total-hc" class="text-4xl font-black text-white">0g</span>
             </div>
         </div>
 
-        <div class="bg-blue-600 p-6 rounded-[2rem] shadow-lg shadow-blue-900/20">
-            <div class="flex gap-4 items-center">
-                <div class="flex-1">
-                    <label class="block text-[10px] font-black text-blue-100 uppercase mb-1">Glucemia Actual</label>
-                    <input type="number" id="glucemia" placeholder="mg/dL" class="w-full bg-blue-700 border-none rounded-xl p-3 text-2xl font-bold text-white placeholder-blue-400 outline-none focus:ring-2 focus:ring-white">
-                </div>
-                <button onclick="calcularTodo()" class="bg-white text-blue-600 px-6 py-4 rounded-xl font-black text-sm shadow-xl hover:bg-slate-100 transition-colors">
-                    CALCULAR
-                </button>
-            </div>
+        <div class="bg-blue-600 p-6 rounded-[2.5rem] shadow-xl">
+            <input type="number" id="glucemia" placeholder="Glucemia mg/dL" class="w-full bg-blue-700 border-none p-4 rounded-2xl text-2xl font-bold text-white mb-4 outline-none placeholder-blue-300">
+            <button onclick="calcular()" class="w-full bg-white text-blue-600 py-4 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition-all">CALCULAR DOSIS</button>
         </div>
-
     </div>
 
-    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/95 p-6 backdrop-blur-sm">
-        <div class="bg-slate-900 w-full max-w-sm rounded-[3rem] border border-slate-700 p-8 text-center shadow-2xl">
-            <p class="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Insulina a Inyectar</p>
-            <div class="py-6 bg-slate-800/50 rounded-3xl border border-slate-700 mb-6">
-                <span id="res-total" class="text-8xl font-black text-white leading-none">0.0</span>
-                <span class="block text-blue-400 font-bold text-xl mt-2 italic">Unidades</span>
+    <div id="modal" class="hidden fixed inset-0 bg-slate-950/98 flex items-center justify-center p-6 z-50">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-[3rem] p-8 text-center shadow-2xl">
+            <p class="text-slate-500 text-[10px] font-bold uppercase mb-4">Dosis Final (Ratio 6.0)</p>
+            <div class="bg-slate-800 py-10 rounded-[2.5rem] mb-6">
+                <div id="ui-res" class="text-9xl font-black text-white">0.0</div>
+                <div class="text-blue-500 font-bold text-xl uppercase tracking-tighter">Unidades</div>
             </div>
-            
-            <div class="flex justify-between text-[10px] font-bold text-slate-500 uppercase px-2 mb-8">
-                <div class="text-left">Comida: <span id="res-comida" class="text-white block text-sm">0.0 u</span></div>
-                <div class="text-right">Corrección: <span id="res-corr" class="text-white block text-sm">0.0 u</span></div>
-            </div>
-
-            <button onclick="document.getElementById('modal').classList.add('hidden')" class="w-full bg-blue-600 py-4 rounded-2xl font-black text-white">ACEPTAR</button>
+            <button onclick="document.getElementById('modal').classList.add('hidden')" class="w-full bg-blue-600 py-4 rounded-2xl font-black text-white">CERRAR</button>
         </div>
     </div>
 
     <script>
-        const RATIO = 6.0; // Ratio agresivo para subir dosis
-        const FSI = 33.3;  // Factor Sensibilidad (DTI 54)
-        const OBJETIVO = 120;
-        
-        let model;
+        const RATIO = 6.0; // Ratio agresivo para evitar quedarse corto
+        const FSI = 33.3;  // Sensibilidad para DTI 54
+        const OBJ = 120;
         let hcTotal = 0;
+        let items = [];
 
-        // DICCIONARIO DE TRADUCCIÓN Y NUTRICIÓN (Ampliable a 500+)
-        const TRADUCTOR = {
-            "apple": { esp: "Manzana", hc: 15, icon: "🍎" },
-            "banana": { esp: "Plátano", hc: 22, icon: "🍌" },
-            "sandwich": { esp: "Sandwich / Bocadillo", hc: 45, icon: "🥪" },
-            "orange": { esp: "Naranja", hc: 12, icon: "🍊" },
-            "broccoli": { esp: "Brócoli", hc: 5, icon: "🥦" },
-            "carrot": { esp: "Zanahoria", hc: 7, icon: "🥕" },
-            "hot dog": { esp: "Perrito Caliente", hc: 35, icon: "🌭" },
-            "pizza": { esp: "Pizza", hc: 50, icon: "🍕" },
-            "donut": { esp: "Donut / Berlina", hc: 30, icon: "🍩" },
-            "cake": { esp: "Pastel / Tarta", hc: 40, icon: "🍰" },
-            "frisbee": { esp: "Plato de Comida", hc: 45, icon: "🍽️" }, // Fallback para platos redondos
-            "bowl": { esp: "Cuenco / Cereales", hc: 50, icon: "🥣" },
-            "bread": { esp: "Pan", hc: 20, icon: "🍞" },
-            "rice": { esp: "Arroz / Paella", hc: 55, icon: "🍚" },
-            "pasta": { esp: "Pasta / Tallarines", hc: 60, icon: "🍝" },
-            "chicken": { esp: "Pollo / Aves", hc: 0, icon: "🍗" },
-            "beef": { esp: "Carne de Ternera", hc: 0, icon: "🥩" },
-            "steak": { esp: "Filete / Lomo", hc: 0, icon: "🥩" },
-            "potato": { esp: "Patata Cocida/Asada", hc: 25, icon: "🥔" },
-            "fries": { esp: "Patatas Fritas", hc: 40, icon: "🍟" },
-            "hamburger": { esp: "Hamburguesa (Carne)", hc: 0, icon: "🍔" }
-        };
-
-        async function init() {
-            model = await cocoSsd.load();
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            document.getElementById('video').srcObject = stream;
+        function add(hc, nombre) {
+            items.push({hc, nombre, id: Date.now()});
+            render();
         }
 
-        async function segmentarPlato() {
-            const video = document.getElementById('video');
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
-            
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            
-            const predictions = await model.detect(video);
-            
-            const listaUI = document.getElementById('lista-resumen');
-            listaUI.innerHTML = "";
+        function remove(id) {
+            items = items.filter(i => i.id !== id);
+            render();
+        }
+
+        function render() {
+            const lista = document.getElementById('lista-plato');
+            lista.innerHTML = "";
             hcTotal = 0;
-            let encontrados = new Set();
-
-            predictions.forEach(p => {
-                const label = p.class.toLowerCase();
-                const info = TRADUCTOR[label];
-
-                // Dibujar en canvas
-                context.strokeStyle = "#60a5fa";
-                context.lineWidth = 4;
-                context.strokeRect(...p.bbox);
-
-                if (info && !encontrados.has(label)) {
-                    encontrados.add(label);
-                    hcTotal += info.hc;
-                    
-                    // Crear fila en la lista resumen
-                    const div = document.createElement('div');
-                    div.className = "food-card flex justify-between items-center bg-slate-700/40 p-3 rounded-2xl border border-slate-600";
-                    div.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">${info.icon}</span>
-                            <div>
-                                <p class="text-sm font-bold text-white">${info.esp.toUpperCase()}</p>
-                                <p class="text-[10px] text-slate-400">Componente identificado</p>
-                            </div>
+            items.forEach(i => {
+                hcTotal += i.hc;
+                lista.innerHTML += `
+                    <div class="flex justify-between items-center bg-slate-800 p-3 rounded-xl border border-slate-700">
+                        <span class="font-bold text-blue-400 uppercase text-[11px]">${i.nombre}</span>
+                        <div class="flex items-center gap-4">
+                            <span class="font-black">${i.hc}g</span>
+                            <button onclick="remove(${i.id})" class="text-slate-500">✕</button>
                         </div>
-                        <div class="text-right">
-                            <p class="text-sm font-black text-blue-400">${info.hc}g HC</p>
-                        </div>
-                    `;
-                    listaUI.appendChild(div);
-                }
+                    </div>`;
             });
-
-            if (hcTotal === 0) {
-                listaUI.innerHTML = "<p class='text-center text-slate-500 text-sm italic py-4'>No se han reconocido alimentos claros. Intenta acercar la cámara.</p>";
-            }
-
-            document.getElementById('total-hc').innerHTML = `${hcTotal}<span class="text-lg text-slate-500 ml-1">g</span>`;
-            document.getElementById('total-raciones').innerText = (hcTotal / 10).toFixed(1) + " R";
+            document.getElementById('total-hc').innerText = hcTotal + "g";
         }
 
-        function calcularTodo() {
-            const glu = parseFloat(document.getElementById('glucemia').value);
-            if (!glu) return alert("Por favor, introduce tu glucemia");
-
-            // Cálculo con Ratio Agresivo (6.0)
-            let doseComida = hcTotal / RATIO;
-            let doseCorr = glu > OBJETIVO ? (glu - OBJETIVO) / FSI : 0;
+        function calcular() {
+            const g = parseFloat(document.getElementById('glucemia').value);
+            if(!g) return alert("Introduce glucemia");
             
-            let totalExacto = doseComida + doseCorr;
+            let uComida = hcTotal / RATIO;
+            let uCorr = g > OBJ ? (g - OBJ) / FSI : 0;
+            let total = Math.round((uComida + uCorr) * 2) / 2;
             
-            // REDONDEO A 0.5 (Para tu pluma)
-            let totalRedondeado = Math.round(totalExacto * 2) / 2;
-
-            document.getElementById('res-total').innerText = totalRedondeado.toFixed(1);
-            document.getElementById('res-comida').innerText = doseComida.toFixed(1) + " u";
-            document.getElementById('res-corr').innerText = doseCorr.toFixed(1) + " u";
+            document.getElementById('ui-res').innerText = total.toFixed(1);
             document.getElementById('modal').classList.remove('hidden');
         }
-
-        init();
     </script>
 </body>
 </html>
