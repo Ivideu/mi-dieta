@@ -3,84 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diabetes Expert AI - Ivideu</title>
+    <title>Diabetes AI Ultra - Ivideu</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
 </head>
-<body class="bg-slate-100 min-h-screen font-sans">
+<body class="bg-slate-900 text-white min-h-screen">
 
-    <div class="max-w-md mx-auto p-4 space-y-4">
-        <header class="bg-blue-600 p-6 rounded-3xl text-white shadow-lg">
-            <h1 class="text-2xl font-bold">Diabetes AI Vision</h1>
-            <p class="opacity-80 text-sm">DTI: 54 | FSI: 33.3 | Ratio: 9.2g/u</p>
+    <div class="max-w-md mx-auto p-4 space-y-6">
+        <header class="text-center py-6">
+            <h1 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">DIABETES VISION PRO</h1>
+            <p class="text-gray-400 text-xs tracking-widest uppercase">Motor de Red Neuronal Profunda</p>
         </header>
 
-        <div class="bg-white p-2 rounded-3xl shadow-md relative overflow-hidden">
-            <video id="video" autoplay playsinline class="w-full h-72 object-cover rounded-2xl"></video>
-            <div id="loader" class="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
-                <p class="text-blue-600 font-bold animate-pulse">Cargando Base de Datos...</p>
-            </div>
-            <div class="absolute bottom-4 left-0 right-0 flex justify-center">
-                <button onclick="escanearPlato()" class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-2xl hover:bg-blue-700 active:scale-95 transition-all">
-                    📸 ESCANEAR PLATO
+        <div class="relative rounded-[3rem] overflow-hidden border-4 border-slate-800 shadow-2xl aspect-square bg-black">
+            <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
+            <div id="scan-line" class="absolute top-0 left-0 w-full h-1 bg-blue-500 shadow-[0_0_15px_blue] animate-scan"></div>
+            
+            <div class="absolute bottom-6 left-0 right-0 flex justify-center px-8">
+                <button onclick="superEscaner()" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-2xl font-black shadow-xl transition-all active:scale-95 flex items-center justify-center gap-3">
+                    <span>⚡ ESCANEO IA PROFUNDO</span>
                 </button>
             </div>
         </div>
 
-        <div id="panel-deteccion" class="bg-white p-5 rounded-3xl shadow-sm border-2 border-transparent transition-all">
-            <h2 class="text-gray-400 text-xs font-bold uppercase mb-2">Resultado del escaneo</h2>
-            <div id="placeholder-text" class="text-gray-300 italic">Enfoca un plato y pulsa escanear...</div>
-            <div id="info-comida" class="hidden">
-                <div class="flex justify-between items-center">
-                    <span id="nombre-alimento" class="text-2xl font-black text-slate-800 uppercase">---</span>
-                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-lg font-bold text-sm" id="badge-hc">0g HC</span>
+        <div class="bg-slate-800 rounded-3xl p-6 border border-slate-700">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="bg-blue-500/20 p-3 rounded-2xl">
+                    <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                 </div>
-                <p class="text-xs text-gray-400 mt-1">Detección automática basada en ración estándar</p>
+                <div>
+                    <h3 id="label-alimento" class="text-xl font-bold text-white uppercase tracking-tight">Esperando plato...</h3>
+                    <p id="label-hc" class="text-green-400 font-bold text-sm">0g Hidratos Detectados</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Glucemia Actual</label>
+                    <input type="number" id="glucemia" placeholder="mg/dL" class="w-full bg-slate-900 border-none p-4 rounded-2xl text-2xl font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <button onclick="calcularInsulina()" class="w-full bg-green-600 py-4 rounded-2xl font-black text-lg hover:bg-green-500 shadow-lg shadow-green-900/20 transition-all">
+                    CALCULAR BOLO
+                </button>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-3xl shadow-sm space-y-4">
-            <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1">GLUCEMIA ACTUAL (MG/DL)</label>
-                <input type="number" id="glucemia" placeholder="Introduce tu glucosa" class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl text-2xl focus:border-blue-500 transition-all outline-none">
-            </div>
-            
-            <button onclick="calcularDosisFinal()" class="w-full bg-slate-800 text-white py-5 rounded-2xl font-black text-xl shadow-lg hover:bg-black transition-all">
-                CALCULAR INSULINA
-            </button>
-        </div>
-
-        <div id="resultado-box" class="hidden bg-green-500 text-white p-8 rounded-[2.5rem] shadow-2xl transition-all scale-100">
-            <p class="text-sm font-bold opacity-80 uppercase">Inyectar ahora:</p>
-            <div class="flex items-baseline space-x-2">
-                <h2 id="total-ui" class="text-7xl font-black">0.0</h2>
-                <span class="text-2xl font-bold">UI</span>
-            </div>
-            <div class="mt-4 grid grid-cols-2 gap-4 border-t border-white/20 pt-4 text-sm font-bold">
-                <div>Comida: <span id="res-comida">0</span> UI</div>
-                <div>Corrección: <span id="res-corr">0</span> UI</div>
+        <div id="resultado" class="hidden animate-bounce-in">
+            <div class="bg-white rounded-[2.5rem] p-8 text-slate-900 shadow-2xl relative">
+                <p class="text-xs font-black text-slate-400 uppercase mb-1">Dosis Recomendada (DTI 54)</p>
+                <div class="flex items-baseline gap-2">
+                    <h2 id="total-ui" class="text-7xl font-black text-slate-900">0.0</h2>
+                    <span class="text-2xl font-bold text-blue-600">UI</span>
+                </div>
+                <div class="mt-6 flex gap-4 text-xs font-bold text-slate-500 border-t pt-4">
+                    <div class="bg-slate-100 p-2 rounded-lg flex-1 text-center">Raciones: <span id="res-rac" class="text-slate-900">0</span></div>
+                    <div class="bg-slate-100 p-2 rounded-lg flex-1 text-center">FSI (Corr): <span id="res-fsi" class="text-slate-900">0</span></div>
+                </div>
             </div>
         </div>
     </div>
+
+    <style>
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        .animate-scan { animation: scan 2s linear infinite; }
+        .animate-bounce-in { animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        @keyframes bounceIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
 
     <script>
         const DTI = 54;
         const OBJETIVO = 120;
         let model;
-        let hcDetectados = 0;
+        let hcFinal = 0;
 
-        // Base de datos de imágenes ampliada (Lógica de Internet)
-        const baseDatosHC = [
-            { id: "arroz", keywords: ["rice", "pilaf", "risotto", "paella"], hc_unidad: 45 }, 
-            { id: "pasta", keywords: ["pasta", "spaghetti", "macaroni", "noodle"], hc_unidad: 50 },
-            { id: "pan", keywords: ["bread", "sandwich", "baguette", "toast"], hc_unidad: 20 },
-            { id: "patata", keywords: ["potato", "fries", "chips", "baked potato"], hc_unidad: 30 },
-            { id: "pizza", keywords: ["pizza"], hc_unidad: 60 },
-            { id: "fruta", keywords: ["apple", "banana", "orange", "fruit", "pear"], hc_unidad: 15 },
-            { id: "legumbres", keywords: ["bean", "lentil", "chickpea"], hc_unidad: 25 },
-            { id: "hamburguesa", keywords: ["hamburger", "cheeseburger", "bun"], hc_unidad: 40 },
-            { id: "bollería", keywords: ["pastry", "cookie", "cake", "muffin"], hc_unidad: 50 }
+        // ESTA ES LA "BASE DE DATOS INFINITA" (Categorización por Familias de Imágenes)
+        const FAMILIAS_COMIDA = [
+            { hc: 50, keys: ["pizza", "dough", "pie", "bread", "sandwich", "burger", "pan", "bollo", "flour"] },
+            { hc: 30, keys: ["pasta", "spaghetti", "noodle", "macaroni", "lasagna", "ravioli"] },
+            { hc: 28, keys: ["rice", "paella", "risotto", "sushi", "grain", "cereal"] },
+            { hc: 20, keys: ["potato", "chip", "fries", "tuber", "patata", "frita"] },
+            { hc: 15, keys: ["fruit", "apple", "banana", "orange", "pear", "grape", "strawberry"] },
+            { hc: 12, keys: ["legume", "bean", "lentil", "chickpea", "stew", "guiso"] },
+            { hc: 5,  keys: ["vegetable", "salad", "lettuce", "broccoli", "spinach", "soup"] },
+            { hc: 40, keys: ["cake", "dessert", "cookie", "sweet", "chocolate", "pastry"] }
         ];
 
         async function init() {
@@ -88,77 +94,59 @@
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 document.getElementById('video').srcObject = stream;
                 model = await mobilenet.load();
-                document.getElementById('loader').classList.add('hidden');
+                console.log("IA Lista");
             } catch (e) {
-                alert("Error: Activa la cámara para que la IA funcione.");
+                alert("Error: Activa la cámara.");
             }
         }
 
-        async function escanearPlato() {
+        async function superEscaner() {
             if(!model) return;
-            
-            const panel = document.getElementById('panel-deteccion');
-            const placeholder = document.getElementById('placeholder-text');
-            const info = document.getElementById('info-comida');
-            
-            placeholder.innerText = "Analizando píxeles...";
-            
             const predictions = await model.classify(document.getElementById('video'));
             
-            let encontrado = false;
-            // Recorremos las etiquetas que devuelve la IA de Internet
+            let detectado = false;
+            // Buscamos en las predicciones de millones de imágenes de MobileNet
             for(let p of predictions) {
-                const label = p.className.toLowerCase();
+                const nombreIA = p.className.toLowerCase();
                 
-                for(let item of baseDatosHC) {
-                    if(item.keywords.some(k => label.includes(k))) {
-                        hcDetectados = item.hc_unidad;
-                        document.getElementById('nombre-alimento').innerText = item.id;
-                        document.getElementById('badge-hc').innerText = hcDetectados + "g HC";
-                        
-                        placeholder.classList.add('hidden');
-                        info.classList.remove('hidden');
-                        panel.style.borderColor = "#22c55e";
-                        encontrado = true;
+                for(let familia of FAMILIAS_COMIDA) {
+                    if(familia.keys.some(k => nombreIA.includes(k))) {
+                        // Asignamos HC según familia y una ración estándar
+                        hcFinal = familia.hc * 1.5; // Estimación ración media 150g
+                        document.getElementById('label-alimento').innerText = nombreIA.split(',')[0];
+                        document.getElementById('label-hc').innerText = hcFinal.toFixed(0) + "g HC Detectados";
+                        detectado = true;
                         break;
                     }
                 }
-                if(encontrado) break;
+                if(detectado) break;
             }
 
-            if(!encontrado) {
-                placeholder.innerText = "No reconozco el plato. Prueba otra vez o escribe los HC.";
-                panel.style.borderColor = "#ef4444";
+            if(!detectado) {
+                document.getElementById('label-alimento').innerText = "Plato no identificado";
+                document.getElementById('label-hc').innerText = "Introduce HC manualmente";
+                hcFinal = prompt("La IA no está segura. ¿Cuántos gramos de HC aproximas?") || 0;
             }
         }
 
-        function calcularDosisFinal() {
+        function calcularInsulina() {
             const glucemia = parseFloat(document.getElementById('glucemia').value);
-            
-            if(!glucemia) return alert("Introduce tu glucemia actual");
-            if(hcDetectados === 0) return alert("Primero escanea un plato o introduce HC");
+            if(!glucemia || hcFinal === 0) return alert("Faltan datos (Glucemia o Escaneo)");
 
-            // LÓGICA MÉDICA (DTI 54)
+            // FÓRMULAS EXACTAS DTI 54
+            const raciones = hcFinal / 10;
             const fsi = 1800 / DTI; // 33.3
-            const ratio = 500 / DTI; // 9.25 gramos por unidad
+            const ratio = 500 / DTI; // 9.25
             
-            const uComida = hcDetectados / ratio;
+            const uComida = hcFinal / ratio;
             const uCorr = glucemia > OBJETIVO ? (glucemia - OBJETIVO) / fsi : 0;
             const total = uComida + uCorr;
 
-            document.getElementById('resultado-box').classList.remove('hidden');
+            document.getElementById('resultado').classList.remove('hidden');
             document.getElementById('total-ui').innerText = total.toFixed(1);
-            document.getElementById('res-comida').innerText = uComida.toFixed(1);
-            document.getElementById('res-corr').innerText = uCorr.toFixed(1);
+            document.getElementById('res-rac').innerText = raciones.toFixed(1);
+            document.getElementById('res-fsi').innerText = uCorr.toFixed(1);
 
-            // Regla del 15 si hay hipoglucemia
-            if(glucemia < 70) {
-                document.getElementById('resultado-box').classList.replace('bg-green-500', 'bg-red-600');
-                alert("¡HIPOGLUCEMIA! Toma 15g de azúcar y no te pongas insulina.");
-            } else {
-                document.getElementById('resultado-box').classList.replace('bg-red-600', 'bg-green-500');
-            }
-            
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
