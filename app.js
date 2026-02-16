@@ -1,91 +1,110 @@
+let model;
+let raciones = 0;
+let alimento = "";
+
 const RATIO = 4;
 const FS = 50;
 const OBJETIVO = 130;
 
-let alimentoDetectado = null;
-let raciones = 0;
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
 
 async function iniciarCamara(){
 
-const video = document.getElementById("video");
-
 const stream = await navigator.mediaDevices.getUserMedia({
-video: { facingMode: "environment" }
+video:{ facingMode:"environment" }
 });
 
 video.srcObject = stream;
 
 }
 
+async function cargarModelo(){
+
+model = await mobilenet.load();
+
+console.log("Modelo IA cargado");
+
+}
+
 iniciarCamara();
+cargarModelo();
 
-async function tomarFoto(){
+async function capturar(){
 
-const video = document.getElementById("video");
-
-const canvas = document.createElement("canvas");
+const ctx = canvas.getContext("2d");
 
 canvas.width = video.videoWidth;
 canvas.height = video.videoHeight;
 
-const ctx = canvas.getContext("2d");
+ctx.drawImage(video,0,0);
 
-ctx.drawImage(video, 0, 0);
-
-const image = canvas.toDataURL();
-
-await reconocerAlimento(image);
+await reconocer();
 
 }
 
-async function reconocerAlimento(image){
+async function reconocer(){
 
-// ejemplo provisional
-alimentoDetectado = "pizza";
+const prediction = await model.classify(canvas);
 
-await consultarBaseDatos(alimentoDetectado);
+alimento = prediction[0].className.split(",")[0];
+
+console.log("Detectado:", alimento);
+
+await buscarCarbohidratos();
 
 }
 
-async function consultarBaseDatos(nombre){
+async function buscarCarbohidratos(){
 
 const url =
-`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${nombre}&search_simple=1&json=1`;
+`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${alimento}&json=1`;
 
 const response = await fetch(url);
 
 const data = await response.json();
+
+if(data.products.length === 0){
+
+alert("Alimento no encontrado");
+return;
+
+}
 
 const carbs =
 data.products[0].nutriments.carbohydrates_100g;
 
 raciones = carbs / 10;
 
+document.getElementById("resultado").innerHTML =
+`
+Alimento detectado: ${alimento}<br>
+Carbohidratos: ${carbs}g<br>
+Raciones: ${raciones.toFixed(2)}
+`;
+
 }
 
-function calcularInsulina(){
+function calcular(){
 
-const glucose =
+const glucosa =
 parseFloat(document.getElementById("glucose").value);
 
 const insulinaComida = raciones / RATIO;
 
-let insulinaCorrectora =
-(glucose - OBJETIVO) / FS;
+let correctora =
+(glucosa - OBJETIVO) / FS;
 
-if(insulinaCorrectora < 0)
-insulinaCorrectora = 0;
+if(correctora < 0) correctora = 0;
 
 const total =
-insulinaComida + insulinaCorrectora;
+insulinaComida + correctora;
 
-document.getElementById("resultado").innerHTML =
-
+document.getElementById("resultado").innerHTML +=
 `
-Alimento: ${alimentoDetectado}<br>
-Raciones: ${raciones.toFixed(2)}<br>
+<br>
 Insulina comida: ${insulinaComida.toFixed(2)}<br>
-Insulina correctora: ${insulinaCorrectora.toFixed(2)}<br>
+Insulina correctora: ${correctora.toFixed(2)}<br>
 Insulina total: ${total.toFixed(2)}
 `;
 
