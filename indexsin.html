@@ -3,92 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diabetes AI - Mega Database</title>
+    <title>GlucoCalc API - Acceso Total</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Outfit', sans-serif; background-color: #020617; color: #f8fafc; }
-        .custom-scroll::-webkit-scrollbar { width: 4px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-        .food-card:active { scale: 0.98; background-color: #1e293b; }
-        .ig-alto { color: #f87171; }
-        .ig-bajo { color: #4ade80; }
-        .ig-medio { color: #fbbf24; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        .loader { border: 2px solid #1e293b; border-top: 2px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="p-4 pb-12">
+<body class="p-4 pb-20">
 
-    <div class="max-w-2xl mx-auto space-y-6">
+    <div class="max-w-xl mx-auto space-y-6">
         
-        <header class="flex justify-between items-end p-2">
+        <header class="flex justify-between items-center p-4 glass rounded-3xl">
             <div>
-                <h1 class="text-3xl font-black tracking-tighter">DATA<span class="text-blue-500 italic">CORE</span></h1>
-                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Ratio: 7.5 | 0.5 UI Step</p>
+                <h1 class="text-2xl font-black text-white italic tracking-tighter">GLOBAL<span class="text-blue-500 text-sm">API</span></h1>
+                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Ratio: 7.5 | Base: OpenFoodFacts</p>
             </div>
-            <div class="text-right">
-                <p class="text-[10px] font-bold text-slate-500 uppercase">Estado</p>
-                <p class="text-xs font-bold text-green-500">Base de Datos Online</p>
+            <div id="api-status" class="flex items-center gap-2 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
+                <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                <span class="text-[9px] font-black text-blue-500 uppercase">En Línea</span>
             </div>
         </header>
 
-        <div class="relative group">
-            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                <span class="text-xl">🔍</span>
+        <div class="relative">
+            <div class="absolute inset-y-0 left-6 flex items-center pointer-events-none">
+                <div id="search-loader" class="hidden loader"></div>
+                <span id="search-icon" class="text-xl">🔍</span>
             </div>
-            <input type="text" id="main-search" oninput="liveSearch()" placeholder="Busca entre miles de alimentos..." 
-                class="w-full bg-slate-900 border-2 border-slate-800 rounded-[2rem] py-6 pl-14 pr-6 text-xl font-bold text-white outline-none focus:border-blue-500 transition-all shadow-2xl">
+            <input type="text" id="db-search" oninput="debounceSearch()" placeholder="Busca marca o alimento..." 
+                class="w-full bg-slate-900 border-2 border-slate-800 rounded-3xl py-6 pl-16 pr-6 text-xl font-bold text-white outline-none focus:border-blue-500 shadow-2xl transition-all">
             
-            <div id="search-results" class="hidden absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-[2rem] max-h-80 overflow-y-auto z-50 shadow-2xl custom-scroll">
+            <div id="results-container" class="hidden absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-3xl max-h-96 overflow-y-auto z-50 shadow-2xl custom-scroll">
                 </div>
         </div>
 
-        <div class="bg-slate-900/50 border border-slate-800 rounded-[2.5rem] p-6 shadow-xl">
-            <h2 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Componentes del Plato</h2>
-            <div id="plate-list" class="space-y-3 min-h-[100px]">
-                <p class="text-slate-600 text-sm italic text-center py-8">Usa el buscador para añadir alimentos...</p>
+        <div class="glass p-6 rounded-[2.5rem]">
+            <h2 class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Comida Actual</h2>
+            <div id="plate-list" class="space-y-3 min-h-[60px]">
+                <p class="text-center py-4 text-slate-600 italic text-sm">Busca un alimento arriba para empezar</p>
             </div>
 
-            <div class="mt-8 pt-6 border-t border-slate-800 grid grid-cols-2 gap-4">
-                <div class="bg-slate-950 p-4 rounded-3xl border border-slate-800">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase">Carbohidratos</p>
-                    <p id="total-hc" class="text-4xl font-black">0g</p>
+            <div class="mt-8 pt-6 border-t border-slate-800/50 flex justify-between items-end">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Total HC</p>
+                    <p id="total-hc" class="text-5xl font-black text-white">0<span class="text-xl text-slate-600 ml-1">g</span></p>
                 </div>
-                <div class="bg-slate-950 p-4 rounded-3xl border border-slate-800">
-                    <p class="text-[10px] font-bold text-slate-500 uppercase">Impacto Glucémico</p>
-                    <p id="ig-summary" class="text-lg font-black text-slate-400">---</p>
-                </div>
+                <button onclick="clearPlate()" class="text-[10px] font-bold text-red-400 uppercase">Limpiar</button>
             </div>
         </div>
 
         <div class="bg-blue-600 p-8 rounded-[3rem] shadow-2xl">
-            <div class="flex flex-col sm:flex-row gap-4">
-                <div class="flex-1">
-                    <label class="text-[10px] font-bold text-blue-200 uppercase ml-2 mb-2 block">Glucemia mg/dL</label>
-                    <input type="number" id="current-glucose" placeholder="---" 
-                        class="w-full bg-blue-700 border-none rounded-2xl p-4 text-3xl font-black text-white outline-none placeholder-blue-400">
+            <div class="space-y-6">
+                <div class="flex gap-4 items-end">
+                    <div class="flex-1">
+                        <label class="text-[10px] font-bold text-blue-100 uppercase ml-2 mb-2 block tracking-widest">Glucemia mg/dL</label>
+                        <input type="number" id="glucose-input" placeholder="---" 
+                            class="w-full bg-blue-700 border-none rounded-2xl p-5 text-4xl font-black text-white outline-none placeholder-blue-300">
+                    </div>
+                    <button onclick="calculateDose()" class="bg-white text-blue-700 h-20 px-10 rounded-2xl font-black uppercase text-xs shadow-xl active:scale-95 transition-all">Calcular</button>
                 </div>
-                <button onclick="calculateDose()" class="bg-white text-blue-700 px-10 py-4 rounded-2xl font-black uppercase text-sm hover:bg-slate-100 active:scale-95 transition-all">Calcular Bolo</button>
             </div>
         </div>
-
     </div>
 
-    <div id="result-modal" class="hidden fixed inset-0 z-[100] bg-slate-950/95 flex items-center justify-center p-6 backdrop-blur-md">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-[3.5rem] p-10 text-center shadow-2xl">
-            <p id="dual-alert" class="hidden text-amber-500 text-[10px] font-black uppercase mb-4 tracking-widest">⚠️ Bolo Dual Necesario</p>
-            
-            <div class="space-y-6">
-                <div>
-                    <p class="text-slate-500 text-[10px] font-black uppercase">Dosis Ahora (70%)</p>
-                    <p id="dose-now" class="text-9xl font-black text-white leading-none">0.0</p>
-                </div>
-                <div id="dual-section" class="hidden pt-6 border-t border-slate-800">
-                    <p class="text-blue-500 text-[10px] font-black uppercase">Dosis en 2 Horas (30%)</p>
-                    <p id="dose-later" class="text-5xl font-black text-blue-400">0.0</p>
-                </div>
-            </div>
-
-            <button onclick="location.reload()" class="w-full mt-10 bg-blue-600 py-5 rounded-2xl font-black uppercase tracking-widest">Nueva Comida</button>
+    <div id="modal-result" class="hidden fixed inset-0 z-[100] bg-slate-950/98 flex items-center justify-center p-6 backdrop-blur-xl">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-[4rem] p-12 text-center">
+            <p class="text-slate-500 text-[10px] font-black uppercase mb-10 tracking-[0.4em]">Inyectar Ahora</p>
+            <p id="final-units" class="text-[11rem] font-black text-white leading-none tracking-tighter">0.0</p>
+            <p class="text-blue-500 font-black text-2xl uppercase mt-4 italic">Unidades</p>
+            <button onclick="closeModal()" class="mt-12 w-full bg-blue-600 py-6 rounded-3xl font-black text-white uppercase tracking-widest">Listo</button>
         </div>
     </div>
 
@@ -96,136 +82,131 @@
         const RATIO = 7.5;
         const FSI = 33.3;
         const TARGET = 120;
+        let plate = [];
+        let timer;
 
-        // BASE DE DATOS MASIVA (Muestra representativa de miles)
-        // Se puede ampliar indefinidamente
-        const MASTER_DB = [
-            { id: 1, n: "Espaguetis a la boloñesa", hc: 55, ig: "Medio", dual: true, icon: "🍝" },
-            { id: 2, n: "Pizza Margarita", hc: 65, ig: "Alto", dual: true, icon: "🍕" },
-            { id: 3, n: "Arroz Blanco Cocido", hc: 45, ig: "Alto", dual: false, icon: "🍚" },
-            { id: 4, n: "Hamburguesa con pan", hc: 40, ig: "Medio", dual: true, icon: "🍔" },
-            { id: 5, n: "Patatas Fritas", hc: 40, ig: "Alto", dual: true, icon: "🍟" },
-            { id: 6, n: "Lentejas con chorizo", hc: 30, ig: "Bajo", dual: true, icon: "🥘" },
-            { id: 7, n: "Pan de Trigo Blanco", hc: 50, ig: "Alto", dual: false, icon: "🍞" },
-            { id: 8, n: "Manzana", hc: 15, ig: "Bajo", dual: false, icon: "🍎" },
-            { id: 9, n: "Sushi Variado (8 piezas)", hc: 40, ig: "Alto", dual: true, icon: "🍣" },
-            { id: 10, n: "Filete de Pollo", hc: 0, ig: "Bajo", dual: false, icon: "🍗" },
-            { id: 11, n: "Ensalada Mixta", hc: 5, ig: "Bajo", dual: false, icon: "🥗" },
-            { id: 12, n: "Plátano Maduro", hc: 22, ig: "Medio", dual: false, icon: "🍌" },
-            { id: 13, n: "Paella de Marisco", hc: 50, ig: "Alto", dual: true, icon: "🥘" },
-            { id: 14, n: "Croquetas de Jamón (4u)", hc: 30, ig: "Alto", dual: true, icon: "🧆" },
-            { id: 15, n: "Garbanzos Guisados", hc: 35, ig: "Bajo", dual: false, icon: "🥣" },
-            // ... Aquí pueden ir miles de alimentos
-        ];
+        // Función para no colapsar la API (espera 500ms tras dejar de escribir)
+        function debounceSearch() {
+            clearTimeout(timer);
+            timer = setTimeout(searchExternal, 500);
+        }
 
-        let currentPlate = [];
+        async function searchExternal() {
+            const query = document.getElementById('db-search').value;
+            const container = document.getElementById('results-container');
+            const loader = document.getElementById('search-loader');
+            const icon = document.getElementById('search-icon');
 
-        function liveSearch() {
-            const query = document.getElementById('main-search').value.toLowerCase();
-            const resultsBox = document.getElementById('search-results');
-            
-            if (query.length < 2) {
-                resultsBox.classList.add('hidden');
-                return;
+            if (query.length < 3) { container.classList.add('hidden'); return; }
+
+            loader.classList.remove('hidden');
+            icon.classList.add('hidden');
+
+            try {
+                // Buscamos en OpenFoodFacts API (Filtramos por carbohidratos)
+                const response = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${query}&search_simple=1&action=process&json=1&page_size=20`);
+                const data = await response.json();
+                
+                renderResults(data.products);
+            } catch (error) {
+                console.error("Error API:", error);
+            } finally {
+                loader.classList.add('hidden');
+                icon.classList.remove('hidden');
             }
+        }
 
-            const filtered = MASTER_DB.filter(item => item.n.toLowerCase().includes(query));
+        function renderResults(products) {
+            const container = document.getElementById('results-container');
+            container.innerHTML = "";
             
-            if (filtered.length > 0) {
-                resultsBox.innerHTML = filtered.map(item => `
-                    <div onclick="addToPlate(${item.id})" class="p-4 hover:bg-slate-800 cursor-pointer border-b border-slate-800 flex justify-between items-center transition-colors">
-                        <div class="flex items-center gap-3">
-                            <span class="text-xl">${item.icon}</span>
-                            <div>
-                                <p class="text-sm font-bold text-white uppercase">${item.n}</p>
-                                <p class="text-[9px] font-bold text-slate-500 uppercase">IG: ${item.ig}</p>
+            if (!products || products.length === 0) {
+                container.innerHTML = "<p class='p-6 text-slate-500 text-center uppercase font-black text-xs'>Sin resultados</p>";
+            } else {
+                products.forEach(p => {
+                    // Cogemos los carbohidratos por cada 100g
+                    const carbs = p.nutriments ? p.nutriments.carbohydrates_100g : null;
+                    if (carbs === null || carbs === undefined) return;
+
+                    const name = p.product_name || "Producto desconocido";
+                    const brand = p.brands || "Genérico";
+
+                    container.innerHTML += `
+                        <div onclick="addToPlate('${name}', ${carbs})" class="p-5 border-b border-slate-800 flex justify-between items-center cursor-pointer hover:bg-slate-800">
+                            <div class="pr-4">
+                                <p class="text-white font-bold text-sm uppercase leading-tight">${name}</p>
+                                <p class="text-[9px] text-slate-500 font-bold uppercase mt-1">${brand}</p>
+                            </div>
+                            <div class="text-right flex-shrink-0">
+                                <span class="text-blue-400 font-black text-lg">${Math.round(carbs)}g</span>
+                                <p class="text-[8px] text-slate-600 font-bold uppercase">/100g</p>
                             </div>
                         </div>
-                        <span class="text-blue-400 font-black">${item.hc}g</span>
-                    </div>
-                `).join('');
-                resultsBox.classList.remove('hidden');
-            } else {
-                resultsBox.classList.add('hidden');
+                    `;
+                });
             }
+            container.classList.remove('hidden');
         }
 
-        function addToPlate(id) {
-            const item = MASTER_DB.find(x => x.id === id);
-            currentPlate.push({ ...item, uid: Date.now() });
-            document.getElementById('main-search').value = "";
-            document.getElementById('search-results').classList.add('hidden');
-            renderPlate();
+        function addToPlate(name, carbs) {
+            // Por defecto añadimos ración de 100g, el usuario puede sumar varios
+            plate.push({ name, hc: Math.round(carbs), id: Date.now() });
+            document.getElementById('db-search').value = "";
+            document.getElementById('results-container').classList.add('hidden');
+            updatePlateUI();
         }
 
-        function removeFromPlate(uid) {
-            currentPlate = currentPlate.filter(i => i.uid !== uid);
-            renderPlate();
-        }
-
-        function renderPlate() {
+        function updatePlateUI() {
             const list = document.getElementById('plate-list');
-            let totalHC = 0;
-            let hasDual = false;
-            let maxIG = "Bajo";
-
-            if (currentPlate.length === 0) {
-                list.innerHTML = `<p class="text-slate-600 text-sm italic text-center py-8">Usa el buscador para añadir alimentos...</p>`;
+            let total = 0;
+            if (plate.length === 0) {
+                list.innerHTML = `<p class="text-center py-4 text-slate-600 italic text-sm">Busca un alimento arriba para empezar</p>`;
             } else {
-                list.innerHTML = currentPlate.map(item => {
-                    totalHC += item.hc;
-                    if (item.dual) hasDual = true;
-                    if (item.ig === "Alto") maxIG = "Alto";
+                list.innerHTML = plate.map(item => {
+                    total += item.hc;
                     return `
-                        <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl animate-in slide-in-from-bottom-2">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">${item.icon}</span>
-                                <p class="text-xs font-bold uppercase">${item.n}</p>
-                            </div>
+                        <div class="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                            <p class="text-[10px] font-black text-white uppercase pr-4">${item.name}</p>
                             <div class="flex items-center gap-4">
-                                <span class="text-sm font-black text-blue-400">${item.hc}g</span>
-                                <button onclick="removeFromPlate(${item.uid})" class="text-slate-500">✕</button>
+                                <span class="font-black text-blue-400 text-sm">${item.hc}g</span>
+                                <button onclick="removeItem(${item.id})" class="text-slate-600 text-lg">✕</button>
                             </div>
                         </div>
                     `;
                 }).join('');
             }
+            document.getElementById('total-hc').innerHTML = `${total}<span class="text-xl text-slate-600 ml-1">g</span>`;
+            window.currentHC = total;
+        }
 
-            document.getElementById('total-hc').innerText = totalHC + "g";
-            document.getElementById('ig-summary').innerText = maxIG.toUpperCase();
-            document.getElementById('ig-summary').className = `text-lg font-black ${maxIG === 'Alto' ? 'ig-alto' : 'ig-bajo'}`;
-            
-            window.finalHC = totalHC;
-            window.finalDual = hasDual;
+        function removeItem(id) {
+            plate = plate.filter(i => i.id !== id);
+            updatePlateUI();
+        }
+
+        function clearPlate() {
+            plate = [];
+            updatePlateUI();
         }
 
         function calculateDose() {
-            const glu = parseFloat(document.getElementById('current-glucose').value);
-            if (!glu) return alert("Introduce tu nivel de azúcar actual.");
+            const glu = parseFloat(document.getElementById('glucose-input').value);
+            if (!glu) return alert("Pon tu glucemia");
 
-            const totalHC = window.finalHC || 0;
-            const doseFood = totalHC / RATIO;
-            const doseCorr = glu > TARGET ? (glu - TARGET) / FSI : 0;
-            const total = doseFood + doseCorr;
+            const hc = window.currentHC || 0;
+            const dose = (hc / RATIO) + (glu > TARGET ? (glu - TARGET) / FSI : 0);
+            
+            // Redondeo a la media unidad (ej: 4.5, 5.0)
+            const final = Math.round(dose * 2) / 2;
 
-            // Lógica de Bolo Dual (70/30) si hay alimentos grasos o IG alto
-            if (window.finalDual && total > 2) {
-                document.getElementById('dual-alert').classList.remove('hidden');
-                document.getElementById('dual-section').classList.remove('hidden');
-                
-                const now = Math.round((total * 0.7) * 2) / 2;
-                const later = Math.round((total * 0.3) * 2) / 2;
-                
-                document.getElementById('dose-now').innerText = now.toFixed(1);
-                document.getElementById('dose-later').innerText = later.toFixed(1);
-            } else {
-                const final = Math.round(total * 2) / 2;
-                document.getElementById('dose-now').innerText = final.toFixed(1);
-                document.getElementById('dual-alert').classList.add('hidden');
-                document.getElementById('dual-section').classList.add('hidden');
-            }
+            document.getElementById('final-units').innerText = final.toFixed(1);
+            document.getElementById('modal-result').classList.remove('hidden');
+        }
 
-            document.getElementById('result-modal').classList.remove('hidden');
+        function closeModal() {
+            document.getElementById('modal-result').classList.add('hidden');
+            clearPlate();
+            document.getElementById('glucose-input').value = "";
         }
     </script>
 </body>
