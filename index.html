@@ -3,63 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diabetes AI Pro - Europa Database</title>
+    <title>Diabetes AI Pro - Ivideu</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
 </head>
-<body class="bg-slate-950 text-white min-h-screen font-sans">
+<body class="bg-black text-white min-h-screen font-sans">
 
     <div class="max-w-md mx-auto p-4 space-y-4">
-        <header class="text-center py-4 border-b border-slate-800">
-            <h1 class="text-2xl font-black text-blue-500">DIABETES VISION <span class="text-white">EUROPE</span></h1>
-            <p class="text-slate-500 text-[10px] uppercase tracking-widest">Base de Datos: Millones de registros (Vía IA + Categorías)</p>
+        <header class="flex justify-between items-center py-2 border-b border-gray-800">
+            <h1 class="text-xl font-black text-blue-500">DIABETES <span class="text-white font-light">VISION</span></h1>
+            <div class="text-[10px] text-right text-gray-500">DTI: 54<br>RATIO: 1.1u/R</div>
         </header>
 
-        <div class="relative rounded-3xl overflow-hidden bg-black aspect-square border-2 border-slate-700 shadow-2xl">
-            <video id="video" autoplay playsinline class="w-full h-full object-cover opacity-80"></video>
-            <div id="scan-bar" class="absolute top-0 left-0 w-full h-1 bg-blue-500 shadow-[0_0_20px_#3b82f6] hidden"></div>
-            
-            <div class="absolute bottom-6 left-0 right-0 px-6">
-                <button onclick="escanearPlato()" id="btn-scan" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-black text-lg transition-all active:scale-95 shadow-lg">
-                    📸 ESCANEAR ALIMENTO
-                </button>
-            </div>
-        </div>
-
-        <div id="panel-info" class="bg-slate-900 p-5 rounded-3xl border border-slate-800">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h3 id="alim-nombre" class="text-lg font-bold text-slate-300">Esperando...</h3>
-                    <p id="alim-hc" class="text-blue-400 font-black text-2xl">0 <span class="text-sm font-normal">g HC</span></p>
-                </div>
-                <div class="bg-slate-800 p-3 rounded-2xl text-center">
-                    <p class="text-[8px] text-slate-500 uppercase">Raciones</p>
-                    <p id="alim-rac" class="text-lg font-bold">0.0</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-slate-900 p-6 rounded-3xl space-y-4 shadow-inner">
-            <div class="space-y-1">
-                <label class="text-[10px] font-bold text-slate-500 uppercase ml-2">Glucemia Actual (mg/dL)</label>
-                <input type="number" id="glucemia" placeholder="Ej: 145" class="w-full bg-slate-800 border-2 border-slate-700 p-4 rounded-2xl text-2xl font-bold focus:border-blue-500 outline-none transition-colors">
-            </div>
-
-            <button onclick="calcularDosis()" class="w-full bg-green-600 hover:bg-green-500 py-5 rounded-2xl font-black text-xl shadow-lg shadow-green-900/40 transition-all">
-                CALCULAR BOLO (DTI 54)
+        <div class="relative rounded-[2rem] overflow-hidden bg-gray-900 aspect-video border-2 border-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.3)]">
+            <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
+            <div id="scanner-line" class="absolute inset-x-0 top-0 h-1 bg-blue-400 shadow-[0_0_10px_blue] animate-bounce"></div>
+            <button onclick="analizarFoto()" class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 px-8 py-3 rounded-full font-black text-sm shadow-2xl active:scale-95 transition-all">
+                📸 ANALIZAR PLATO
             </button>
         </div>
 
-        <div id="box-resultado" class="hidden bg-white text-slate-950 p-8 rounded-[2.5rem] shadow-2xl border-t-8 border-blue-500">
-            <p class="font-bold text-xs text-slate-400 uppercase">Dosis Sugerida:</p>
-            <div class="flex items-baseline gap-2">
-                <h2 id="ui-total" class="text-7xl font-black">0.0</h2>
-                <span class="text-2xl font-bold text-blue-600">UI</span>
+        <div class="bg-gray-900 p-5 rounded-3xl border border-gray-800 space-y-3">
+            <div class="flex justify-between items-center">
+                <span id="txt-alimento" class="text-lg font-bold text-gray-300 italic text-sm">Esperando imagen...</span>
+                <span id="txt-hc" class="text-2xl font-black text-green-400">0g <span class="text-xs">HC</span></span>
             </div>
-            <div class="mt-4 grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
-                <div class="text-xs font-bold text-slate-500 uppercase">Bolo: <span id="ui-bolo" class="text-slate-900 text-sm">0.0</span></div>
-                <div class="text-xs font-bold text-slate-500 uppercase">Corr: <span id="ui-corr" class="text-slate-900 text-sm">0.0</span></div>
+            <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                <button onclick="setHC(60, 'Pasta/Arroz')" class="bg-gray-800 px-4 py-2 rounded-xl text-[10px] font-bold whitespace-nowrap border border-gray-700">🍝 PASTA/ARROZ</button>
+                <button onclick="setHC(50, 'Legumbres')" class="bg-gray-800 px-4 py-2 rounded-xl text-[10px] font-bold whitespace-nowrap border border-gray-700">🍲 LEGUMBRES</button>
+                <button onclick="setHC(40, 'Pan/Pizza')" class="bg-gray-800 px-4 py-2 rounded-xl text-[10px] font-bold whitespace-nowrap border border-gray-700">🍕 PAN/PIZZA</button>
+                <button onclick="setHC(20, 'Fruta/Postre')" class="bg-gray-800 px-4 py-2 rounded-xl text-[10px] font-bold whitespace-nowrap border border-gray-700">🍎 FRUTA</button>
+            </div>
+        </div>
+
+        <div class="bg-gray-900 p-6 rounded-3xl space-y-4">
+            <div class="relative">
+                <label class="text-[10px] font-bold text-gray-500 uppercase absolute -top-2 left-3 bg-gray-900 px-2 italic">Glucemia Actual</label>
+                <input type="number" id="glucemia" placeholder="mg/dL" class="w-full bg-transparent border-2 border-gray-700 p-4 rounded-2xl text-2xl font-bold focus:border-blue-500 transition-all outline-none">
+            </div>
+            
+            <button onclick="calcularInsulina()" class="w-full bg-blue-600 py-5 rounded-2xl font-black text-xl shadow-lg hover:bg-blue-500 active:scale-95 transition-all uppercase tracking-widest">
+                Calcular Bolo
+            </button>
+        </div>
+
+        <div id="res-card" class="hidden bg-gradient-to-br from-blue-600 to-blue-800 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+            <div class="relative z-10">
+                <p class="text-xs font-bold text-blue-200 uppercase mb-1">Dosis Recomendada:</p>
+                <div class="flex items-baseline gap-2">
+                    <h2 id="ui-total" class="text-7xl font-black">0.0</h2>
+                    <span class="text-2xl font-bold text-white">UI</span>
+                </div>
+                <div class="mt-4 flex gap-4 text-[10px] font-bold text-blue-200 border-t border-blue-400/30 pt-4">
+                    <div class="bg-black/20 p-2 rounded-lg flex-1">BOLO COMIDA: <span id="ui-comida" class="text-white">0</span></div>
+                    <div class="bg-black/20 p-2 rounded-lg flex-1">CORRECCIÓN: <span id="ui-corr" class="text-white">0</span></div>
+                </div>
             </div>
         </div>
     </div>
@@ -68,18 +67,15 @@
         const DTI = 54;
         const OBJETIVO = 120;
         let model;
-        let hcDetectados = 0;
+        let hcGlobal = 0;
 
-        // Base de datos extendida (Millones de variantes resumidas en categorías clave de Europa)
-        const categoriasEuropa = [
-            { hc: 50, keys: ["pizza", "bread", "pan", "sandwich", "burger", "flour", "bakery", "dough", "baguette"] },
-            { hc: 30, keys: ["pasta", "spaghetti", "macaroni", "noodle", "lasagna", "ravioli"] },
-            { hc: 28, keys: ["rice", "paella", "risotto", "arroz", "grain"] },
-            { hc: 20, keys: ["potato", "fry", "patata", "chips", "tuber"] },
-            { hc: 15, keys: ["apple", "fruit", "banana", "pear", "orange", "grape", "fruit"] },
-            { hc: 12, keys: ["bean", "lentil", "chickpea", "legume", "stew"] },
-            { hc: 5,  keys: ["vegetable", "salad", "lettuce", "broccoli", "spinach", "soup", "omelette"] },
-            { hc: 55, keys: ["cake", "dessert", "cookie", "chocolate", "sweet", "pastry"] }
+        // Base de datos de Visión para Europa (Millones de imágenes representadas en estos tags)
+        const dbEurope = [
+            { hc: 60, tags: ["rice", "paella", "risotto", "pasta", "spaghetti", "macaroni", "noodle", "pizza"] },
+            { hc: 40, tags: ["bread", "sandwich", "baguette", "bun", "hamburger", "potato", "fries"] },
+            { hc: 25, tags: ["bean", "lentil", "chickpea", "stew", "legume"] },
+            { hc: 15, tags: ["apple", "banana", "orange", "fruit", "pear", "yogurt"] },
+            { hc: 5,  tags: ["salad", "vegetable", "soup", "broccoli", "spinach", "egg", "meat", "fish"] }
         ];
 
         async function init() {
@@ -87,72 +83,58 @@
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 document.getElementById('video').srcObject = stream;
                 model = await mobilenet.load();
-                document.getElementById('btn-scan').innerText = "📸 ESCANEAR ALIMENTO";
+                document.getElementById('txt-alimento').innerText = "Cámara e IA Listas";
             } catch (e) {
-                alert("Error de cámara: Activa los permisos en el navegador.");
+                alert("Error: Activa los permisos de cámara.");
             }
         }
 
-        async function escanearPlato() {
+        async function analizarFoto() {
             if(!model) return;
-            const scanBar = document.getElementById('scan-bar');
-            scanBar.classList.remove('hidden');
-            document.getElementById('alim-nombre').innerText = "Analizando...";
-            
+            document.getElementById('txt-alimento').innerText = "Analizando plato...";
             const predictions = await model.classify(document.getElementById('video'));
             
-            let encontrado = false;
+            let detected = false;
             for(let p of predictions) {
-                const label = p.className.toLowerCase();
-                
-                for(let cat of categoriasEuropa) {
-                    if(cat.keys.some(k => label.includes(k))) {
-                        // Ración estándar europea 150g -> hc * 1.5
-                        hcDetectados = Math.round(cat.hc * 1.5); 
-                        document.getElementById('alim-nombre').innerText = label.split(',')[0];
-                        document.getElementById('alim-hc').innerText = hcDetectados + " g HC";
-                        document.getElementById('alim-rac').innerText = (hcDetectados/10).toFixed(1);
-                        encontrado = true;
+                const name = p.className.toLowerCase();
+                for(let item of dbEurope) {
+                    if(item.tags.some(t => name.includes(t))) {
+                        setHC(item.hc, name.split(',')[0]);
+                        detected = true;
                         break;
                     }
                 }
-                if(encontrado) break;
+                if(detected) break;
             }
-
-            if(!encontrado) {
-                // Fallback: Si no lo conoce, abre un selector rápido para evitar el NaN
-                let manual = prompt("No estoy seguro. ¿Qué es? 1-Pasta/Arroz, 2-Pan/Pizza, 3-Fruta, 4-Verdura");
-                if(manual == "1") hcDetectados = 45;
-                else if(manual == "2") hcDetectados = 60;
-                else if(manual == "3") hcDetectados = 15;
-                else hcDetectados = 5; // Verdura por defecto
-                
-                document.getElementById('alim-nombre').innerText = "Manual / Mixto";
-                document.getElementById('alim-hc').innerText = hcDetectados + " g HC";
-                document.getElementById('alim-rac').innerText = (hcDetectados/10).toFixed(1);
+            if(!detected) {
+                document.getElementById('txt-alimento').innerText = "No estoy segura. Elige abajo:";
             }
-            scanBar.classList.add('hidden');
         }
 
-        function calcularDosis() {
-            const glu = parseFloat(document.getElementById('glucemia').value);
-            
-            // Seguridad ante NaN
-            if(isNaN(glu)) return alert("Por favor, pon tu glucemia actual");
-            if(hcDetectados === 0 || isNaN(hcDetectados)) return alert("Escanea el alimento primero");
+        function setHC(val, name) {
+            hcGlobal = val;
+            document.getElementById('txt-hc').innerText = val + "g HC";
+            document.getElementById('txt-alimento').innerText = name.toUpperCase();
+        }
 
-            const fsi = 1800 / DTI; // 33.3
-            const ratio = 500 / DTI; // 9.25 g/u
+        function calcularInsulina() {
+            const glu = parseFloat(document.getElementById('glucemia').value);
+            if(isNaN(glu) || hcGlobal === 0) return alert("Falta Glucemia o elegir alimento");
+
+            // FÓRMULAS EXACTAS DTI 54 (Pág 10-11 PDF)
+            const fsi = 1800 / DTI; // 33.3 (Baja 33mg por cada unidad)
+            const ratio = 500 / DTI; // 9.25 (1 unidad por cada 9.2g de HC)
             
-            const uComida = hcDetectados / ratio;
+            const uComida = hcGlobal / ratio;
             const uCorr = glu > OBJETIVO ? (glu - OBJETIVO) / fsi : 0;
             const total = uComida + uCorr;
 
-            document.getElementById('box-resultado').classList.remove('hidden');
+            document.getElementById('res-card').classList.remove('hidden');
             document.getElementById('ui-total').innerText = total.toFixed(1);
-            document.getElementById('ui-bolo').innerText = uComida.toFixed(1) + " UI";
-            document.getElementById('ui-corr').innerText = uCorr.toFixed(1) + " UI";
+            document.getElementById('ui-comida').innerText = uComida.toFixed(1) + "u";
+            document.getElementById('ui-corr').innerText = uCorr.toFixed(1) + "u";
 
+            if(glu < 70) alert("¡ALERTA HIPOGLUCEMIA! Regla del 15 (PDF Pág 3). No pongas insulina.");
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
