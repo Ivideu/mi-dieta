@@ -2,171 +2,224 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Diabetes AI - Segmentación Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Pro - Bolo Dual & IG</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #0f172a; }
-        .food-badge { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        body { font-family: 'Outfit', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .ig-alto { color: #f87171; }
+        .ig-bajo { color: #4ade80; }
+        #photo-canvas { cursor: crosshair; }
+        .dual-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
     </style>
 </head>
-<body class="p-4 pb-32">
+<body class="pb-10">
 
-    <div class="max-w-md mx-auto space-y-6">
-        <header class="text-center py-2">
-            <h1 class="text-2xl font-black text-blue-500 italic">GLUCO<span class="text-white">SEGMENT</span></h1>
-            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Ratio: 7.5 | Sin errores de IA</p>
+    <div class="max-w-md mx-auto p-4 space-y-4">
+        
+        <header class="flex justify-between items-center py-4">
+            <div>
+                <h1 class="text-2xl font-black text-blue-500 italic">GLUCO<span class="text-white">DUAL</span></h1>
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Ratio: 7.5 | Paso: 0.5 UI</p>
+            </div>
+            <div id="status-ig" class="bg-slate-800 px-3 py-1 rounded-full text-[10px] font-bold border border-slate-700">IG: --</div>
         </header>
 
-        <div class="bg-slate-900 p-4 rounded-[2rem] border border-slate-800 shadow-xl">
-            <p class="text-[10px] font-black text-slate-500 uppercase mb-3 text-center">Toca para segmentar el plato</p>
+        <div class="relative w-full aspect-square bg-black rounded-[3rem] overflow-hidden border-2 border-slate-800 shadow-2xl">
+            <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
+            <canvas id="photo-canvas" class="hidden absolute inset-0 w-full h-full object-cover"></canvas>
             
-            <div class="grid grid-cols-3 gap-2" id="grid-alimentos">
-                </div>
+            <button id="btn-snap" onclick="takePhoto()" class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white text-slate-900 w-16 h-16 rounded-full border-4 border-blue-500 shadow-2xl flex items-center justify-center active:scale-90 transition-all z-20">
+                <span class="text-2xl">📸</span>
+            </button>
+
+            <button id="btn-reset" onclick="resetApp()" class="hidden absolute top-4 right-4 bg-red-600/80 p-2 rounded-lg text-[10px] font-bold z-20">NUEVA FOTO</button>
         </div>
 
-        <div class="bg-slate-800 p-6 rounded-[2.5rem] border border-slate-700">
-            <h2 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                🍴 Plato Actual
-            </h2>
-            <div id="lista-segmentada" class="space-y-2 min-h-[100px]">
-                <p class="text-slate-500 text-sm italic text-center py-6">Selecciona alimentos arriba...</p>
+        <div id="tip" class="hidden text-center text-blue-400 text-[10px] font-bold uppercase animate-pulse">👆 Toca sobre el alimento en la foto</div>
+
+        <div class="bg-slate-900 p-6 rounded-[2.5rem] border border-slate-800 shadow-lg">
+            <h3 class="text-[10px] font-black text-slate-500 uppercase mb-4 tracking-[0.2em]">Desglose Nutricional</h3>
+            <div id="lista-segmentada" class="space-y-3 min-h-[80px]">
+                <p class="text-slate-600 text-sm italic text-center py-4">Saca una foto para analizar...</p>
             </div>
             
-            <div class="mt-6 pt-4 border-t border-slate-700 flex justify-between items-end">
+            <div class="mt-6 pt-4 border-t border-slate-800 flex justify-between items-end">
                 <div>
                     <p class="text-[10px] text-slate-500 font-bold uppercase">Total Hidratos</p>
-                    <p id="total-hc" class="text-5xl font-black text-white">0<span class="text-xl text-slate-600 ml-1">g</span></p>
+                    <p id="total-hc" class="text-4xl font-black text-white">0g</p>
                 </div>
                 <div class="text-right">
-                    <p class="text-[10px] text-slate-500 font-bold uppercase text-blue-400">Raciones</p>
-                    <p id="total-rac" class="text-2xl font-black text-white">0.0</p>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase">Impacto Glucémico</p>
+                    <p id="ig-label" class="text-sm font-bold text-slate-400">NORMAL</p>
                 </div>
             </div>
         </div>
 
-        <div class="bg-blue-600 p-6 rounded-[2.5rem] shadow-2xl">
-            <div class="flex gap-4">
-                <div class="flex-1">
-                    <input type="number" id="glucemia" placeholder="mg/dL" class="w-full bg-blue-700 border-none rounded-2xl p-4 text-2xl font-bold text-white placeholder-blue-300 outline-none">
-                </div>
-                <button onclick="calcularDosis()" class="bg-white text-blue-600 px-8 rounded-2xl font-black text-sm uppercase tracking-tighter">Calcular</button>
+        <div class="bg-blue-600 p-6 rounded-[2.5rem] shadow-xl">
+            <div class="flex gap-4 items-center">
+                <input type="number" id="glucemia" placeholder="mg/dL" class="w-full bg-blue-700 border-none rounded-2xl p-4 text-2xl font-bold text-white placeholder-blue-300 outline-none">
+                <button onclick="calcularTodo()" class="bg-white text-blue-600 px-8 py-5 rounded-2xl font-black text-xs uppercase shadow-lg">Calcular</button>
             </div>
         </div>
+
     </div>
 
-    <div id="modal" class="hidden fixed inset-0 bg-slate-950/98 flex items-center justify-center z-50 p-6 backdrop-blur-sm">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-[3rem] p-10 text-center shadow-2xl">
-            <p class="text-slate-500 text-[10px] font-black uppercase mb-4 tracking-widest">Insulina Sugerida (Ratio 7.5)</p>
-            <div class="py-10 bg-slate-800/50 rounded-[2.5rem] border border-slate-700 mb-8">
-                <span id="res-total" class="text-9xl font-black text-white leading-none">0.0</span>
-                <span class="block text-blue-500 font-bold text-2xl mt-4">UNIDADES</span>
+    <div id="selector-modal" class="hidden fixed inset-0 z-50 bg-black/95 p-6 overflow-y-auto">
+        <h2 class="text-white font-black text-center mb-8 tracking-widest">¿QUÉ ES ESTE ALIMENTO?</h2>
+        <div id="grid-db" class="grid grid-cols-2 gap-3">
             </div>
-            <button onclick="document.getElementById('modal').classList.add('hidden')" class="w-full bg-blue-600 py-4 rounded-2xl font-black text-white">ENTENDIDO</button>
+        <button onclick="cerrarSelector()" class="w-full mt-10 bg-slate-800 py-4 rounded-2xl font-bold uppercase text-xs">Cerrar</button>
+    </div>
+
+    <div id="modal-resultado" class="hidden fixed inset-0 z-50 bg-slate-950/98 flex items-center justify-center p-6 backdrop-blur-md">
+        <div class="dual-card border border-slate-700 w-full max-w-sm rounded-[3rem] p-8 shadow-2xl">
+            <div id="dual-warning" class="hidden mb-6 bg-orange-500/10 border border-orange-500/50 p-4 rounded-2xl text-center">
+                <p class="text-orange-500 font-black text-[10px] uppercase">⚠️ Sugerencia: Bolo Dual</p>
+                <p class="text-xs text-slate-300 mt-1">Alimentos grasos o de IG alto detectados.</p>
+            </div>
+
+            <div class="space-y-6 text-center">
+                <div>
+                    <p class="text-slate-500 text-[10px] font-bold uppercase mb-2">Dosis Inmediata (70%)</p>
+                    <div id="dosis-ahora" class="text-7xl font-black text-white">0.0</div>
+                </div>
+                
+                <div id="seccion-retardada" class="hidden pt-6 border-t border-slate-700">
+                    <p class="text-blue-400 text-[10px] font-bold uppercase mb-2">Dosis en 2 Horas (30%)</p>
+                    <div id="dosis-luego" class="text-5xl font-black text-blue-400">0.0</div>
+                    <button class="mt-4 bg-blue-600/20 text-blue-400 border border-blue-500/30 px-6 py-2 rounded-full text-[10px] font-black uppercase">🔔 Poner Alarma</button>
+                </div>
+            </div>
+
+            <button onclick="location.reload()" class="w-full mt-10 bg-white text-slate-900 py-4 rounded-2xl font-black uppercase">Nueva Comida</button>
         </div>
     </div>
 
     <script>
-        // CONFIGURACIÓN DE RATIO (Ajustado a 7.5 como pediste)
         const RATIO = 7.5; 
         const FSI = 33.3; 
         const OBJETIVO = 120;
 
-        // --- CÓMO AMPLIAR LOS ALIMENTOS ---
-        // Solo tienes que añadir una línea nueva aquí abajo siguiendo este formato:
-        // "nombre": { esp: "Nombre en pantalla", hc: gramos, icon: "icono" }
-        const BASE_DATOS = {
-            "espagueti": { esp: "Espaguetis", hc: 55, icon: "🍝" },
-            "pizza": { esp: "Pizza", hc: 65, icon: "🍕" },
-            "arroz": { esp: "Arroz Blanco", hc: 50, icon: "🍚" },
-            "patatas": { esp: "Patatas Fritas", hc: 45, icon: "🍟" },
-            "pan": { esp: "Pan / Rebanada", hc: 20, icon: "🍞" },
-            "lentejas": { esp: "Lentejas", hc: 30, icon: "🥘" },
-            "carne": { esp: "Lomo / Carne", hc: 0, icon: "🥩" },
-            "fruta": { esp: "Fruta", hc: 15, icon: "🍎" },
-            "dulce": { esp: "Postre / Dulce", hc: 40, icon: "🍰" },
-            "ensalada": { esp: "Verdura / Ensalada", hc: 5, icon: "🥗" }
+        // BASE DE DATOS PROFESIONAL CON IG Y GRASA
+        const DB = {
+            "espagueti": { esp: "Espaguetis", hc: 50, ig: 45, dual: true, icon: "🍝" },
+            "pizza": { esp: "Pizza Completa", hc: 70, ig: 80, dual: true, icon: "🍕" },
+            "arroz": { esp: "Arroz", hc: 45, ig: 70, dual: false, icon: "🍚" },
+            "patatas_f": { esp: "Patatas Fritas", hc: 45, ig: 95, dual: true, icon: "🍟" },
+            "hamburguesa": { esp: "Hamburguesa", hc: 40, ig: 65, dual: true, icon: "🍔" },
+            "pan": { esp: "Pan Blanco", hc: 25, ig: 75, dual: false, icon: "🍞" },
+            "fruta": { esp: "Fruta", hc: 15, ig: 40, dual: false, icon: "🍎" },
+            "carne": { esp: "Carne / Proteína", hc: 0, ig: 0, dual: false, icon: "🥩" },
+            "ensalada": { esp: "Verdura", hc: 5, ig: 15, dual: false, icon: "🥗" }
         };
 
-        let platoActual = [];
+        let stream;
+        let plato = [];
 
-        // Generar botones de alimentos automáticamente
-        function cargarBotones() {
-            const grid = document.getElementById('grid-alimentos');
-            for (let id in BASE_DATOS) {
-                const item = BASE_DATOS[id];
+        async function init() {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            document.getElementById('video').srcObject = stream;
+            populateDB();
+        }
+
+        function takePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('photo-canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            video.classList.add('hidden');
+            canvas.classList.remove('hidden');
+            document.getElementById('btn-snap').classList.add('hidden');
+            document.getElementById('btn-reset').classList.remove('hidden');
+            document.getElementById('tip').classList.remove('hidden');
+        }
+
+        function resetApp() { location.reload(); }
+
+        document.getElementById('photo-canvas').addEventListener('click', () => {
+            document.getElementById('selector-modal').classList.remove('hidden');
+        });
+
+        function populateDB() {
+            const grid = document.getElementById('grid-db');
+            for(let id in DB) {
                 grid.innerHTML += `
-                    <button onclick="añadirAlPlato('${id}')" class="bg-slate-800 p-3 rounded-2xl flex flex-col items-center border border-slate-700 active:bg-blue-600 transition-colors">
-                        <span class="text-2xl mb-1">${item.icon}</span>
-                        <span class="text-[9px] font-black uppercase text-slate-300">${item.esp}</span>
+                    <button onclick="addSegment('${id}')" class="bg-slate-800 p-5 rounded-3xl flex flex-col items-center border border-slate-700 active:bg-blue-600 transition-all">
+                        <span class="text-4xl mb-2">${DB[id].icon}</span>
+                        <span class="text-[10px] font-black uppercase text-center">${DB[id].esp}</span>
                     </button>
                 `;
             }
         }
 
-        function añadirAlPlato(id) {
-            const alimento = BASE_DATOS[id];
-            platoActual.push({ ...alimento, uniqueId: Date.now() });
-            actualizarInterfaz();
+        function addSegment(id) {
+            plato.push({...DB[id], uid: Date.now()});
+            cerrarSelector();
+            updateUI();
         }
 
-        function quitarDelPlato(uId) {
-            platoActual = platoActual.filter(i => i.uniqueId !== uId);
-            actualizarInterfaz();
-        }
+        function cerrarSelector() { document.getElementById('selector-modal').classList.add('hidden'); }
 
-        function actualizarInterfaz() {
+        function updateUI() {
             const lista = document.getElementById('lista-segmentada');
-            const totalUI = document.getElementById('total-hc');
-            const racUI = document.getElementById('total-rac');
-            
-            if (platoActual.length === 0) {
-                lista.innerHTML = `<p class="text-slate-500 text-sm italic text-center py-6">Selecciona alimentos arriba...</p>`;
-                totalUI.innerText = "0g";
-                racUI.innerText = "0.0";
-                return;
-            }
-
             let totalHC = 0;
+            let maxIG = 0;
             lista.innerHTML = "";
 
-            platoActual.forEach(item => {
+            plato.forEach(item => {
                 totalHC += item.hc;
+                maxIG = Math.max(maxIG, item.ig);
                 lista.innerHTML += `
-                    <div class="food-badge flex justify-between items-center bg-slate-700/40 p-3 rounded-xl border border-slate-600">
+                    <div class="flex justify-between items-center bg-slate-800/50 p-3 rounded-2xl border border-slate-700">
                         <div class="flex items-center gap-3">
                             <span class="text-xl">${item.icon}</span>
-                            <span class="text-xs font-bold text-white uppercase">${item.esp}</span>
+                            <span class="text-xs font-bold uppercase">${item.esp}</span>
                         </div>
-                        <div class="flex items-center gap-4">
-                            <span class="text-sm font-black text-blue-400">${item.hc}g</span>
-                            <button onclick="quitarDelPlato(${item.uniqueId})" class="text-slate-500 hover:text-white font-bold">✕</button>
-                        </div>
+                        <span class="font-black text-blue-400">${item.hc}g</span>
                     </div>
                 `;
             });
 
-            totalUI.innerHTML = `${totalHC}<span class="text-xl text-slate-600 ml-1">g</span>`;
-            racUI.innerText = (totalHC / 10).toFixed(1);
-            window.lastTotal = totalHC;
+            document.getElementById('total-hc').innerText = totalHC + "g";
+            document.getElementById('ig-label').innerText = maxIG > 70 ? "IG ALTO ⚠️" : (maxIG > 0 ? "IG NORMAL" : "LIGERO");
+            window.lastHC = totalHC;
+            window.lastDual = plato.some(i => i.dual);
         }
 
-        function calcularDosis() {
+        function calcularTodo() {
             const glu = parseFloat(document.getElementById('glucemia').value);
-            if (!glu) return alert("Introduce tu glucemia actual");
+            if(!glu) return alert("Pon tu glucemia");
 
-            const hc = window.lastTotal || 0;
+            const hc = window.lastHC || 0;
             const doseComida = hc / RATIO;
             const doseCorr = glu > OBJETIVO ? (glu - OBJETIVO) / FSI : 0;
-            
-            let total = Math.round((doseComida + doseCorr) * 2) / 2;
+            const total = doseComida + doseCorr;
 
-            document.getElementById('res-total').innerText = total.toFixed(1);
-            document.getElementById('modal').classList.remove('hidden');
+            if (window.lastDual && total > 2) {
+                // LÓGICA BOLO DUAL: 70% ahora, 30% en 2 horas
+                document.getElementById('dual-warning').classList.remove('hidden');
+                document.getElementById('seccion-retardada').classList.remove('hidden');
+                
+                const ahora = Math.round((total * 0.7) * 2) / 2;
+                const luego = Math.round((total * 0.3) * 2) / 2;
+                
+                document.getElementById('dosis-ahora').innerText = ahora.toFixed(1);
+                document.getElementById('dosis-luego').innerText = luego.toFixed(1);
+            } else {
+                const final = Math.round(total * 2) / 2;
+                document.getElementById('dosis-ahora').innerText = final.toFixed(1);
+                document.getElementById('seccion-retardada').classList.add('hidden');
+                document.getElementById('dual-warning').classList.add('hidden');
+            }
+
+            document.getElementById('modal-resultado').classList.remove('hidden');
         }
 
-        cargarBotones();
+        init();
     </script>
 </body>
 </html>
