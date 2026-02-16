@@ -1,172 +1,301 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Diabetes AI - Segmentación Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #0f172a; }
-        .food-badge { animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes pop { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Diabetes AI - Segmentación Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;900&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: "Outfit", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+  </style>
 </head>
-<body class="p-4 pb-32">
+<body class="bg-slate-950 text-slate-50 min-h-screen">
+  <div class="max-w-md mx-auto px-4 py-6 space-y-4">
+    <!-- Header -->
+    <header class="text-center space-y-1">
+      <h1 class="text-2xl font-black tracking-tight">Diabetes AI</h1>
+      <p class="text-sm text-slate-300">Segmentación Pro · Raciones · Insulina rápida</p>
+    </header>
 
-    <div class="max-w-md mx-auto space-y-6">
-        <header class="text-center py-2">
-            <h1 class="text-2xl font-black text-blue-500 italic">GLUCO<span class="text-white">SEGMENT</span></h1>
-            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Ratio: 7.5 | Sin errores de IA</p>
-        </header>
+    <!-- Ajustes personales -->
+    <section class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 space-y-3">
+      <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wide">Ajustes personales</h2>
+      <div class="space-y-2">
+        <label class="block text-xs text-slate-300">
+          Gramos de hidratos por ración
+          <input
+            id="hcPerPortion"
+            type="number"
+            value="15"
+            class="mt-1 w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </label>
+        <label class="block text-xs text-slate-300">
+          Unidades de insulina por gramo de HC
+          <input
+            id="insulinPerGram"
+            type="number"
+            step="0.01"
+            value="0.1"
+            class="mt-1 w-full rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          />
+        </label>
+      </div>
+      <p class="text-[11px] text-slate-400">
+        Estos valores deben ser indicados por tu equipo médico. Esta app es una ayuda, no sustituye su criterio.
+      </p>
+    </section>
 
-        <div class="bg-slate-900 p-4 rounded-[2rem] border border-slate-800 shadow-xl">
-            <p class="text-[10px] font-black text-slate-500 uppercase mb-3 text-center">Toca para segmentar el plato</p>
-            
-            <div class="grid grid-cols-3 gap-2" id="grid-alimentos">
-                </div>
+    <!-- Buscar alimento -->
+    <section class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 space-y-3">
+      <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wide">Añadir alimento</h2>
+      <div class="flex gap-2">
+        <input
+          id="foodQuery"
+          type="text"
+          placeholder="Ej: pan, manzana..."
+          class="flex-1 rounded-xl bg-slate-900 border border-slate-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+        <button
+          id="searchFoodBtn"
+          class="px-3 py-2 rounded-xl bg-emerald-500 text-xs font-semibold text-slate-950 hover:bg-emerald-400"
+        >
+          Buscar
+        </button>
+      </div>
+
+      <ul id="foodResults" class="divide-y divide-slate-800 text-sm max-h-40 overflow-y-auto"></ul>
+
+      <div id="selectedFoodBox" class="hidden items-center gap-2 text-sm">
+        <span id="selectedFoodName" class="flex-1 truncate"></span>
+        <input
+          id="selectedFoodGrams"
+          type="number"
+          value="100"
+          class="w-20 rounded-xl bg-slate-900 border border-slate-700 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+        <span class="text-xs text-slate-400">g</span>
+        <button
+          id="addFoodBtn"
+          class="px-3 py-1 rounded-xl bg-sky-500 text-xs font-semibold text-slate-950 hover:bg-sky-400"
+        >
+          Añadir
+        </button>
+      </div>
+    </section>
+
+    <!-- Foto del plato -->
+    <section class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 space-y-3">
+      <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wide">Foto del plato</h2>
+      <input
+        id="plateImageInput"
+        type="file"
+        accept="image/*"
+        capture="environment"
+        class="block w-full text-xs text-slate-300 file:mr-3 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500 file:text-slate-950 hover:file:bg-emerald-400"
+      />
+      <p class="text-[11px] text-slate-400">
+        La identificación automática del alimento y la cantidad depende del modelo de visión conectado en el backend
+        (<code>/api/plate/analyze</code>).
+      </p>
+      <p id="plateStatus" class="text-[11px] text-slate-400"></p>
+    </section>
+
+    <!-- Resumen y cálculo -->
+    <section class="bg-slate-900/70 border border-slate-800 rounded-2xl p-4 space-y-3">
+      <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wide">Resumen</h2>
+      <ul id="itemsList" class="divide-y divide-slate-800 text-sm max-h-40 overflow-y-auto"></ul>
+
+      <div class="grid grid-cols-3 gap-2 text-xs text-slate-300">
+        <div class="bg-slate-900 rounded-xl p-2">
+          <p class="text-[11px] text-slate-400">HC totales</p>
+          <p id="totalCarbs" class="text-base font-semibold">0.0 g</p>
         </div>
-
-        <div class="bg-slate-800 p-6 rounded-[2.5rem] border border-slate-700">
-            <h2 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                🍴 Plato Actual
-            </h2>
-            <div id="lista-segmentada" class="space-y-2 min-h-[100px]">
-                <p class="text-slate-500 text-sm italic text-center py-6">Selecciona alimentos arriba...</p>
-            </div>
-            
-            <div class="mt-6 pt-4 border-t border-slate-700 flex justify-between items-end">
-                <div>
-                    <p class="text-[10px] text-slate-500 font-bold uppercase">Total Hidratos</p>
-                    <p id="total-hc" class="text-5xl font-black text-white">0<span class="text-xl text-slate-600 ml-1">g</span></p>
-                </div>
-                <div class="text-right">
-                    <p class="text-[10px] text-slate-500 font-bold uppercase text-blue-400">Raciones</p>
-                    <p id="total-rac" class="text-2xl font-black text-white">0.0</p>
-                </div>
-            </div>
+        <div class="bg-slate-900 rounded-xl p-2">
+          <p class="text-[11px] text-slate-400">Raciones</p>
+          <p id="totalPortions" class="text-base font-semibold">0.0</p>
         </div>
-
-        <div class="bg-blue-600 p-6 rounded-[2.5rem] shadow-2xl">
-            <div class="flex gap-4">
-                <div class="flex-1">
-                    <input type="number" id="glucemia" placeholder="mg/dL" class="w-full bg-blue-700 border-none rounded-2xl p-4 text-2xl font-bold text-white placeholder-blue-300 outline-none">
-                </div>
-                <button onclick="calcularDosis()" class="bg-white text-blue-600 px-8 rounded-2xl font-black text-sm uppercase tracking-tighter">Calcular</button>
-            </div>
+        <div class="bg-slate-900 rounded-xl p-2">
+          <p class="text-[11px] text-slate-400">Insulina rápida</p>
+          <p id="totalInsulin" class="text-base font-semibold">0.0 U</p>
         </div>
-    </div>
+      </div>
 
-    <div id="modal" class="hidden fixed inset-0 bg-slate-950/98 flex items-center justify-center z-50 p-6 backdrop-blur-sm">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-[3rem] p-10 text-center shadow-2xl">
-            <p class="text-slate-500 text-[10px] font-black uppercase mb-4 tracking-widest">Insulina Sugerida (Ratio 7.5)</p>
-            <div class="py-10 bg-slate-800/50 rounded-[2.5rem] border border-slate-700 mb-8">
-                <span id="res-total" class="text-9xl font-black text-white leading-none">0.0</span>
-                <span class="block text-blue-500 font-bold text-2xl mt-4">UNIDADES</span>
-            </div>
-            <button onclick="document.getElementById('modal').classList.add('hidden')" class="w-full bg-blue-600 py-4 rounded-2xl font-black text-white">ENTENDIDO</button>
-        </div>
-    </div>
+      <p class="text-[11px] text-slate-400">
+        Cálculo orientativo basado en hidratos de carbono. Ajusta siempre según las indicaciones de tu equipo médico.
+      </p>
+    </section>
+  </div>
 
-    <script>
-        // CONFIGURACIÓN DE RATIO (Ajustado a 7.5 como pediste)
-        const RATIO = 7.5; 
-        const FSI = 33.3; 
-        const OBJETIVO = 120;
+  <script>
+    // Estado en memoria
+    const state = {
+      items: [], // { name, grams, carbsPer100g }
+      selectedFood: null
+    };
 
-        // --- CÓMO AMPLIAR LOS ALIMENTOS ---
-        // Solo tienes que añadir una línea nueva aquí abajo siguiendo este formato:
-        // "nombre": { esp: "Nombre en pantalla", hc: gramos, icon: "icono" }
-        const BASE_DATOS = {
-            "espagueti": { esp: "Espaguetis", hc: 55, icon: "🍝" },
-            "pizza": { esp: "Pizza", hc: 65, icon: "🍕" },
-            "arroz": { esp: "Arroz Blanco", hc: 50, icon: "🍚" },
-            "patatas": { esp: "Patatas Fritas", hc: 45, icon: "🍟" },
-            "pan": { esp: "Pan / Rebanada", hc: 20, icon: "🍞" },
-            "lentejas": { esp: "Lentejas", hc: 30, icon: "🥘" },
-            "carne": { esp: "Lomo / Carne", hc: 0, icon: "🥩" },
-            "fruta": { esp: "Fruta", hc: 15, icon: "🍎" },
-            "dulce": { esp: "Postre / Dulce", hc: 40, icon: "🍰" },
-            "ensalada": { esp: "Verdura / Ensalada", hc: 5, icon: "🥗" }
-        };
+    const hcPerPortionInput = document.getElementById("hcPerPortion");
+    const insulinPerGramInput = document.getElementById("insulinPerGram");
 
-        let platoActual = [];
+    const foodQueryInput = document.getElementById("foodQuery");
+    const searchFoodBtn = document.getElementById("searchFoodBtn");
+    const foodResultsList = document.getElementById("foodResults");
 
-        // Generar botones de alimentos automáticamente
-        function cargarBotones() {
-            const grid = document.getElementById('grid-alimentos');
-            for (let id in BASE_DATOS) {
-                const item = BASE_DATOS[id];
-                grid.innerHTML += `
-                    <button onclick="añadirAlPlato('${id}')" class="bg-slate-800 p-3 rounded-2xl flex flex-col items-center border border-slate-700 active:bg-blue-600 transition-colors">
-                        <span class="text-2xl mb-1">${item.icon}</span>
-                        <span class="text-[9px] font-black uppercase text-slate-300">${item.esp}</span>
-                    </button>
-                `;
-            }
+    const selectedFoodBox = document.getElementById("selectedFoodBox");
+    const selectedFoodNameSpan = document.getElementById("selectedFoodName");
+    const selectedFoodGramsInput = document.getElementById("selectedFoodGrams");
+    const addFoodBtn = document.getElementById("addFoodBtn");
+
+    const plateImageInput = document.getElementById("plateImageInput");
+    const plateStatus = document.getElementById("plateStatus");
+
+    const itemsList = document.getElementById("itemsList");
+    const totalCarbsEl = document.getElementById("totalCarbs");
+    const totalPortionsEl = document.getElementById("totalPortions");
+    const totalInsulinEl = document.getElementById("totalInsulin");
+
+    function renderItems() {
+      itemsList.innerHTML = "";
+      state.items.forEach((item, index) => {
+        const li = document.createElement("li");
+        li.className = "flex items-center justify-between py-1.5";
+        li.innerHTML = `
+          <div class="flex-1">
+            <p class="text-xs font-medium">${item.name}</p>
+            <p class="text-[11px] text-slate-400">${item.grams} g · ${item.carbsPer100g} g HC / 100 g</p>
+          </div>
+          <button data-index="${index}" class="text-[11px] text-rose-400 hover:text-rose-300">Quitar</button>
+        `;
+        itemsList.appendChild(li);
+      });
+
+      itemsList.querySelectorAll("button[data-index]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const idx = Number(btn.getAttribute("data-index"));
+          state.items.splice(idx, 1);
+          updateTotals();
+        });
+      });
+
+      updateTotals();
+    }
+
+    function updateTotals() {
+      const hcPerPortion = Number(hcPerPortionInput.value) || 15;
+      const insulinPerGram = Number(insulinPerGramInput.value) || 0;
+
+      const totalCarbs = state.items.reduce(
+        (sum, it) => sum + (it.carbsPer100g * it.grams) / 100,
+        0
+      );
+      const portions = hcPerPortion > 0 ? totalCarbs / hcPerPortion : 0;
+      const insulin = totalCarbs * insulinPerGram;
+
+      totalCarbsEl.textContent = totalCarbs.toFixed(1) + " g";
+      totalPortionsEl.textContent = portions.toFixed(1);
+      totalInsulinEl.textContent = insulin.toFixed(1) + " U";
+    }
+
+    // Buscar alimentos
+    searchFoodBtn.addEventListener("click", async () => {
+      const q = foodQueryInput.value.trim();
+      if (!q) return;
+
+      foodResultsList.innerHTML = '<li class="py-2 text-xs text-slate-400">Buscando...</li>';
+
+      try {
+        const res = await fetch("/api/foods/search?q=" + encodeURIComponent(q));
+        const data = await res.json();
+        const items = data.items || [];
+
+        if (!items.length) {
+          foodResultsList.innerHTML =
+            '<li class="py-2 text-xs text-slate-400">Sin resultados</li>';
+          return;
         }
 
-        function añadirAlPlato(id) {
-            const alimento = BASE_DATOS[id];
-            platoActual.push({ ...alimento, uniqueId: Date.now() });
-            actualizarInterfaz();
+        foodResultsList.innerHTML = "";
+        items.forEach((f) => {
+          const li = document.createElement("li");
+          li.className = "py-1.5 px-1 cursor-pointer hover:bg-slate-800/60";
+          li.innerHTML = `
+            <p class="text-xs font-medium">${f.name}</p>
+            <p class="text-[11px] text-slate-400">${f.carbsPer100g} g HC / 100 g</p>
+          `;
+          li.addEventListener("click", () => {
+            state.selectedFood = f;
+            selectedFoodNameSpan.textContent = f.name;
+            selectedFoodBox.classList.remove("hidden");
+          });
+          foodResultsList.appendChild(li);
+        });
+      } catch (err) {
+        console.error(err);
+        foodResultsList.innerHTML =
+          '<li class="py-2 text-xs text-rose-400">Error al buscar alimentos</li>';
+      }
+    });
+
+    // Añadir alimento seleccionado
+    addFoodBtn.addEventListener("click", () => {
+      if (!state.selectedFood) return;
+      const grams = Number(selectedFoodGramsInput.value) || 0;
+      if (grams <= 0) return;
+
+      state.items.push({
+        name: state.selectedFood.name,
+        grams,
+        carbsPer100g: state.selectedFood.carbsPer100g
+      });
+
+      state.selectedFood = null;
+      selectedFoodBox.classList.add("hidden");
+      selectedFoodGramsInput.value = "100";
+      renderItems();
+    });
+
+    // Foto del plato
+    plateImageInput.addEventListener("change", async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      plateStatus.textContent = "Subiendo y analizando imagen...";
+      const formData = new FormData();
+      formData.append("image", file);
+
+      try {
+        const res = await fetch("/api/plate/analyze", {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+        const items = data.items || [];
+
+        if (!items.length) {
+          plateStatus.textContent = "No se han detectado alimentos en la imagen.";
+          return;
         }
 
-        function quitarDelPlato(uId) {
-            platoActual = platoActual.filter(i => i.uniqueId !== uId);
-            actualizarInterfaz();
-        }
+        state.items = items.map((it) => ({
+          name: it.name,
+          grams: it.grams,
+          carbsPer100g: it.carbsPer100g
+        }));
 
-        function actualizarInterfaz() {
-            const lista = document.getElementById('lista-segmentada');
-            const totalUI = document.getElementById('total-hc');
-            const racUI = document.getElementById('total-rac');
-            
-            if (platoActual.length === 0) {
-                lista.innerHTML = `<p class="text-slate-500 text-sm italic text-center py-6">Selecciona alimentos arriba...</p>`;
-                totalUI.innerText = "0g";
-                racUI.innerText = "0.0";
-                return;
-            }
+        plateStatus.textContent = "Plato analizado correctamente.";
+        renderItems();
+      } catch (err) {
+        console.error(err);
+        plateStatus.textContent = "Error analizando la imagen del plato.";
+      }
+    });
 
-            let totalHC = 0;
-            lista.innerHTML = "";
-
-            platoActual.forEach(item => {
-                totalHC += item.hc;
-                lista.innerHTML += `
-                    <div class="food-badge flex justify-between items-center bg-slate-700/40 p-3 rounded-xl border border-slate-600">
-                        <div class="flex items-center gap-3">
-                            <span class="text-xl">${item.icon}</span>
-                            <span class="text-xs font-bold text-white uppercase">${item.esp}</span>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <span class="text-sm font-black text-blue-400">${item.hc}g</span>
-                            <button onclick="quitarDelPlato(${item.uniqueId})" class="text-slate-500 hover:text-white font-bold">✕</button>
-                        </div>
-                    </div>
-                `;
-            });
-
-            totalUI.innerHTML = `${totalHC}<span class="text-xl text-slate-600 ml-1">g</span>`;
-            racUI.innerText = (totalHC / 10).toFixed(1);
-            window.lastTotal = totalHC;
-        }
-
-        function calcularDosis() {
-            const glu = parseFloat(document.getElementById('glucemia').value);
-            if (!glu) return alert("Introduce tu glucemia actual");
-
-            const hc = window.lastTotal || 0;
-            const doseComida = hc / RATIO;
-            const doseCorr = glu > OBJETIVO ? (glu - OBJETIVO) / FSI : 0;
-            
-            let total = Math.round((doseComida + doseCorr) * 2) / 2;
-
-            document.getElementById('res-total').innerText = total.toFixed(1);
-            document.getElementById('modal').classList.remove('hidden');
-        }
-
-        cargarBotones();
-    </script>
+    // Recalcular al cambiar ajustes
+    hcPerPortionInput.addEventListener("input", updateTotals);
+    insulinPerGramInput.addEventListener("input", updateTotals);
+  </script>
 </body>
 </html>
