@@ -1,2 +1,0 @@
-# mi-dieta
-mi-dieta
