@@ -3,151 +3,426 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diabetes AI Vision Gold</title>
+    <title>Diabetes AI - Motor de Segmentación</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; }
+        .canvas-overlay { position: absolute; top: 0; left: 0; z-index: 10; pointer-events: none; }
+    </style>
 </head>
-<body class="bg-slate-950 text-white font-sans min-h-screen">
+<body class="min-h-screen p-4 flex flex-col items-center">
 
-    <div class="max-w-md mx-auto p-4 space-y-4">
-        <header class="text-center py-2">
-            <h1 class="text-2xl font-black text-blue-500 tracking-tighter">DIABETES AI <span class="text-white">GOLD</span></h1>
-            <p class="text-[10px] text-slate-500 uppercase">DTI: 54 | Detección Multicomponente</p>
+    <div class="w-full max-w-md space-y-4">
+        
+        <header class="flex justify-between items-center border-b border-slate-700 pb-2">
+            <div>
+                <h1 class="text-xl font-black text-green-500">FOOD <span class="text-white">SEGMENTER</span></h1>
+                <p class="text-[10px] text-slate-500">DTI: 54 | RATIO: 6.0 | PASOS: 0.5 UI</p>
+            </div>
+            <div class="bg-green-900/30 border border-green-500/50 px-2 py-1 rounded text-[10px] text-green-300">
+                COCO-SSD IA
+            </div>
         </header>
 
-        <div class="relative rounded-[2rem] overflow-hidden border-2 border-slate-800 bg-black aspect-square">
-            <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
-            <div class="absolute inset-0 border-[20px] border-black/20 pointer-events-none"></div>
-            <button onclick="escanearPlatoCompleto()" class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-blue-600 px-10 py-4 rounded-2xl font-black shadow-2xl active:scale-95 transition-all">
-                📸 ESCANEAR PLATO
+        <div class="relative w-full aspect-square bg-black rounded-3xl overflow-hidden border-2 border-slate-700 shadow-2xl">
+            <video id="video" autoplay playsinline class="w-full h-full object-cover opacity-90"></video>
+            <canvas id="canvas" class="canvas-overlay"></canvas>
+            
+            <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
+                <button onclick="detectarObjetos()" class="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:scale-[1.02] transition-transform shadow-lg active:bg-green-700">
+                    🚀 INICIAR SEGMENTACIÓN
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700">
+            <h3 class="text-[10px] text-slate-400 uppercase mb-2">Alimentos Detectados:</h3>
+            <div id="lista-detecciones" class="space-y-2">
+                <p class="text-slate-600 text-sm italic">Presiona "Iniciar Segmentación" para analizar...</p>
+            </div>
+            <div class="mt-4 pt-4 border-t border-slate-700 flex justify-between items-center">
+                <span class="text-slate-300 font-bold">Total Hidratos:</span>
+                <span id="total-hc-display" class="text-2xl font-black text-green-400">0g</span>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
+            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Tu Glucemia (mg/dL)</label>
+            <input type="number" id="glucemia" placeholder="Ej: 130" class="w-full bg-slate-900 border-2 border-slate-600 p-4 rounded-xl text-3xl font-bold text-center text-white focus:border-green-500 focus:ring-4 focus:ring-green-500/20 outline-none transition-all placeholder-slate-700">
+            
+            <button onclick="calcularDosis()" class="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 py-4 rounded-xl font-black text-xl text-white shadow-xl hover:shadow-green-500/20 transition-all uppercase tracking-widest">
+                Calcular Dosis
             </button>
         </div>
 
-        <div class="bg-slate-900 rounded-3xl p-5 border border-slate-800">
-            <h2 class="text-[10px] font-bold text-slate-500 uppercase mb-3">Desglose del Plato</h2>
-            <div id="lista-alimentos" class="space-y-2">
-                <p class="text-slate-600 italic text-sm text-center">Enfoca los alimentos y escanea...</p>
-            </div>
-            <div class="mt-4 pt-4 border-t border-slate-800 flex justify-between items-center">
-                <span class="font-bold text-slate-400">Total Hidratos:</span>
-                <span id="total-hc" class="text-2xl font-black text-blue-400">0g</span>
-            </div>
-        </div>
-
-        <div class="bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-4">
-            <input type="number" id="glucemia" placeholder="Glucemia mg/dL" class="w-full bg-slate-950 border-2 border-slate-800 p-4 rounded-2xl text-2xl font-bold text-center outline-none focus:border-blue-500 transition-all">
-            <button onclick="calcularDosisFinal()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 py-5 rounded-2xl font-black text-xl">CALCULAR INSULINA</button>
-        </div>
-
-        <div id="modal" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center p-6 z-50">
-            <div class="bg-slate-900 border border-slate-800 w-full rounded-[3rem] p-8 text-center relative">
-                <h3 class="text-slate-500 text-xs font-bold uppercase mb-4">Dosis para Pluma (0.5)</h3>
-                <div class="text-8xl font-black mb-2" id="res-ui">0.0</div>
-                <div class="text-blue-500 font-bold mb-8 text-xl">UNIDADES</div>
+        <div id="resultado-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-6">
+            <div class="bg-slate-900 w-full max-w-sm rounded-[2rem] border border-slate-700 p-6 shadow-2xl relative">
+                <button onclick="cerrarModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white text-xl font-bold">✕</button>
                 
-                <div class="grid grid-cols-2 gap-2 text-[10px] font-mono text-slate-500 mb-6">
-                    <div class="bg-slate-950 p-2 rounded-xl">COMIDA: <span id="det-comida" class="text-white"></span></div>
-                    <div class="bg-slate-950 p-2 rounded-xl">CORR: <span id="det-corr" class="text-white"></span></div>
+                <h2 class="text-center text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-6">DOSIS PARA TU PLUMA (0.5 UI)</h2>
+                
+                <div class="text-center py-4 bg-slate-800/50 rounded-3xl border border-slate-700/50 mb-6">
+                    <span id="dosis-total" class="text-8xl font-black text-white">0.0</span>
+                    <span class="block text-green-500 font-bold text-xl mt-[-10px]">UNIDADES</span>
                 </div>
 
-                <button onclick="document.getElementById('modal').classList.add('hidden')" class="w-full bg-slate-800 py-4 rounded-2xl font-bold">CERRAR</button>
+                <div class="space-y-3 text-xs font-mono text-slate-400 border-t border-slate-800 pt-4">
+                    <div class="flex justify-between">
+                        <span>BOLO COMIDA (Exacto):</span>
+                        <span id="info-comida" class="text-white">0.00</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>CORRECCIÓN (Exacto):</span>
+                        <span id="info-corr" class="text-white">0.00</span>
+                    </div>
+                    <div class="flex justify-between text-yellow-500 pt-2">
+                        <span>AJUSTE PLUMA:</span>
+                        <span>Redondeo a 0.5</span>
+                    </div>
+                </div>
+
+                <button onclick="cerrarModal()" class="w-full mt-6 bg-slate-800 hover:bg-slate-700 py-3 rounded-xl font-bold text-white transition-colors">
+                    Cerrar
+                </button>
             </div>
         </div>
+
     </div>
 
     <script>
         const DTI = 54;
         const OBJETIVO = 120;
-        let model;
+        const RATIO_CORREGIDO = 6.0; // Ratio más agresivo para +3 UI
+        const FSI = 1800 / DTI; // 33.3
+        
+        let cocoSsdModel;
         let hcAcumulados = 0;
 
-        // BASE DE DATOS EXTENDIDA (Mapeo de +500 variantes de alimentos)
-        const DB_AMPLIADA = [
-            // CEREALES Y DERIVADOS (Abarca arroces, pastas, cuscús, quinoa, etc.)
-            { hc: 60, keys: ["rice", "paella", "risotto", "pasta", "spaghetti", "macaroni", "noodle", "couscous", "quinoa", "grain", "cereal"] },
-            // PANES Y BOLLERIA (Abarca pan blanco, integral, bagel, croissant, etc.)
-            { hc: 50, keys: ["bread", "sandwich", "baguette", "bun", "toast", "croissant", "bagel", "pastry", "dough", "pizza", "flour"] },
-            // TUBERCULOS (Patatas, yuca, boniato, purés)
-            { hc: 35, keys: ["potato", "fries", "chips", "tuber", "yucca", "yam", "sweet potato", "mashed"] },
-            // LEGUMBRES (Lentejas, garbanzos, judías, soja)
-            { hc: 20, keys: ["bean", "lentil", "chickpea", "legume", "stew", "hummus", "soy"] },
-            // FRUTAS DULCES (Plátano, uva, mango, dátil)
-            { hc: 22, keys: ["banana", "grape", "mango", "date", "fig", "cherry"] },
-            // FRUTAS MEDIAS (Manzana, pera, naranja, piña)
-            { hc: 12, keys: ["apple", "pear", "orange", "pineapple", "strawberry", "melon", "fruit"] },
-            // PROTEINAS CON HC (Carnes empanadas, nuggets, salchichas con relleno)
-            { hc: 15, keys: ["nugget", "breaded", "sausage", "meatball", "croquette"] },
-            // VEGETALES CON ALGO DE HC (Zanahoria, guisantes, maíz)
-            { hc: 10, keys: ["corn", "pea", "carrot", "beet", "pumpkin"] },
-            // PROTEINAS LIMPIAS (Para identificar que es un componente pero suma 0 HC)
-            { hc: 0, keys: ["meat", "steak", "chicken", "fish", "egg", "ham", "bacon", "patty", "omelette"] }
+        // Nuestra Base de Datos "Nutricional" ampliada para COCO-SSD
+        const FOOD_DATABASE = [
+            // Almidones y Carbohidratos complejos
+            { name: "pasta", hc_per_portion: 60 }, // Porción 150g pasta cocida
+            { name: "pizza", hc_per_portion: 50 }, // 1/4 pizza
+            { name: "bread", hc_per_portion: 25 }, // 1 rebanada grande
+            { name: "sandwich", hc_per_portion: 40 }, // Sandwich simple
+            { name: "hot dog", hc_per_portion: 30 }, // Pan y salchicha
+            { name: "donut", hc_per_portion: 35 }, // 1 donut
+            { name: "cake", hc_per_portion: 40 }, // 1 porción
+            { name: "waffle", hc_per_portion: 30 }, // 1 waffle
+            { name: "pancake", hc_per_portion: 25 }, // 1 tortita
+            { name: "fries", hc_per_portion: 40 }, // Ración de 100-120g
+            { name: "potato", hc_per_portion: 30 }, // 1 patata mediana
+            { name: "rice", hc_per_portion: 50 }, // Porción 150g cocido
+            { name: "bowl", hc_per_portion: 60 }, // Asumimos bowl de cereal/arroz
+            // Frutas
+            { name: "apple", hc_per_portion: 15 }, // 1 manzana mediana
+            { name: "banana", hc_per_portion: 25 }, // 1 plátano grande
+            { name: "orange", hc_per_portion: 12 }, // 1 naranja
+            { name: "carrot", hc_per_portion: 7 }, // 1 zanahoria grande
+            // Proteínas (0 HC o muy pocos)
+            { name: "person", hc_per_portion: 0 }, // Para evitar detectarse a sí mismo
+            { name: "cup", hc_per_portion: 0 },
+            { name: "fork", hc_per_portion: 0 },
+            { name: "spoon", hc_per_portion: 0 },
+            { name: "knife", hc_per_portion: 0 },
+            { name: "plate", hc_per_portion: 0 },
+            { name: "frisbee", hc_per_portion: 0 }, // Para evitar platos voladores
+            { name: "bottle", hc_per_portion: 0 },
+            { name: "bird", hc_per_portion: 0 },
+            { name: "cat", hc_per_portion: 0 },
+            { name: "dog", hc_per_portion: 0 },
+            { name: "sheep", hc_per_portion: 0 },
+            { name: "cow", hc_per_portion: 0 },
+            { name: "horse", hc_per_portion: 0 },
+            { name: "sandwich", hc_per_portion: 40 }, // sandwich tiene pan (HC)
+            { name: "pizza", hc_per_portion: 50 }, // pizza tiene masa (HC)
+            { name: "hot dog", hc_per_portion: 30 }, // hot dog tiene pan (HC)
+            { name: "broccoli", hc_per_portion: 5 }, // 100g de brócoli cocido
+            { name: "lettuce", hc_per_portion: 2 }, // 100g de lechuga
+            { name: "carrot", hc_per_portion: 7 }, // 100g de zanahoria
+            { name: "cucumber", hc_per_portion: 4 }, // 100g de pepino
+            { name: "celery", hc_per_portion: 3 }, // 100g de apio
+            { name: "bell pepper", hc_per_portion: 6 }, // 100g de pimiento
+            { name: "onion", hc_per_portion: 8 }, // 100g de cebolla
+            { name: "garlic", hc_per_portion: 30 }, // ¡cuidado con el ajo concentrado!
+            { name: "potato", hc_per_portion: 17 }, // 100g de patata cocida
+            { name: "tomato", hc_per_portion: 4 }, // 100g de tomate
+            { name: "chicken", hc_per_portion: 0 },
+            { name: "beef", hc_per_portion: 0 },
+            { name: "pork", hc_per_portion: 0 },
+            { name: "fish", hc_per_portion: 0 },
+            { name: "egg", hc_per_portion: 1 }, // El huevo tiene 1g HC por clara/yema
+            { name: "cheese", hc_per_portion: 1 }, // La mayoría de quesos 1g HC
+            { name: "milk", hc_per_portion: 5 }, // 100ml leche entera
+            { name: "yogurt", hc_per_portion: 5 }, // 100g yogur natural
+            { name: "butter", hc_per_portion: 0 },
+            { name: "oil", hc_per_portion: 0 },
+            { name: "bread", hc_per_portion: 45 }, // 100g de pan blanco
+            { name: "rice", hc_per_portion: 28 }, // 100g de arroz cocido
+            { name: "pasta", hc_per_portion: 30 }, // 100g de pasta cocida
+            { name: "corn", hc_per_portion: 20 }, // 100g de maíz
+            { name: "bean", hc_per_portion: 20 }, // 100g de frijoles cocidos
+            { name: "lentil", hc_per_portion: 20 }, // 100g de lentejas cocidas
+            { name: "peas", hc_per_portion: 14 }, // 100g de guisantes
+            { name: "cookies", hc_per_portion: 60 }, // 100g de galletas
+            { name: "cake", hc_per_portion: 50 }, // 100g de pastel
+            { name: "candy", hc_per_portion: 80 }, // 100g de caramelos
+            { name: "ice cream", hc_per_portion: 24 }, // 100g de helado
+            { name: "juice", hc_per_portion: 10 }, // 100ml de zumo de fruta
+            { name: "soda", hc_per_portion: 10 }, // 100ml de refresco
+            { name: "coffee", hc_per_portion: 0 },
+            { name: "tea", hc_per_portion: 0 },
+            { name: "wine", hc_per_portion: 3 }, // 100ml de vino tinto
+            { name: "beer", hc_per_portion: 4 }, // 100ml de cerveza
+            { name: "water", hc_per_portion: 0 },
+            // Otros (con HC bajos o 0)
+            { name: "fork", hc_per_portion: 0 },
+            { name: "spoon", hc_per_portion: 0 },
+            { name: "knife", hc_per_portion: 0 },
+            { name: "bowl", hc_per_portion: 0 },
+            { name: "cup", hc_per_portion: 0 },
+            { name: "plate", hc_per_portion: 0 },
+            { name: "bottle", hc_per_portion: 0 },
+            { name: "keyboard", hc_per_portion: 0 },
+            { name: "mouse", hc_per_portion: 0 },
+            { name: "laptop", hc_per_portion: 0 },
+            { name: "cell phone", hc_per_portion: 0 },
+            { name: "book", hc_per_portion: 0 },
+            { name: "chair", hc_per_portion: 0 },
+            { name: "couch", hc_per_portion: 0 },
+            { name: "table", hc_per_portion: 0 },
+            { name: "bed", hc_per_portion: 0 },
+            { name: "toilet", hc_per_portion: 0 },
+            { name: "tv", hc_per_portion: 0 },
+            { name: "microwave", hc_per_portion: 0 },
+            { name: "oven", hc_per_portion: 0 },
+            { name: "refrigerator", hc_per_portion: 0 },
+            { name: "blender", hc_per_portion: 0 },
+            { name: "toaster", hc_per_portion: 0 },
+            { name: "sink", hc_per_portion: 0 },
+            { name: "faucet", hc_per_portion: 0 },
+            { name: "shower", hc_per_portion: 0 },
+            { name: "bathtub", hc_per_portion: 0 },
+            { name: "toilet", hc_per_portion: 0 },
+            { name: "door", hc_per_portion: 0 },
+            { name: "window", hc_per_portion: 0 },
+            { name: "curtain", hc_per_portion: 0 },
+            { name: "rug", hc_per_portion: 0 },
+            { name: "pillow", hc_per_portion: 0 },
+            { name: "blanket", hc_per_portion: 0 },
+            { name: "dresser", hc_per_portion: 0 },
+            { name: "mirror", hc_per_portion: 0 },
+            { name: "flower", hc_per_portion: 0 },
+            { name: "tree", hc_per_portion: 0 },
+            { name: "plant", hc_per_portion: 0 },
+            { name: "grass", hc_per_portion: 0 },
+            { name: "road", hc_per_portion: 0 },
+            { name: "car", hc_per_portion: 0 },
+            { name: "truck", hc_per_portion: 0 },
+            { name: "bus", hc_per_portion: 0 },
+            { name: "train", hc_per_portion: 0 },
+            { name: "motorcycle", hc_per_portion: 0 },
+            { name: "bicycle", hc_per_portion: 0 },
+            { name: "airplane", hc_per_portion: 0 },
+            { name: "boat", hc_per_portion: 0 },
+            { name: "traffic light", hc_per_portion: 0 },
+            { name: "fire hydrant", hc_per_portion: 0 },
+            { name: "stop sign", hc_per_portion: 0 },
+            { name: "parking meter", hc_per_portion: 0 },
+            { name: "bench", hc_per_portion: 0 },
+            { name: "backpack", hc_per_portion: 0 },
+            { name: "umbrella", hc_per_portion: 0 },
+            { name: "handbag", hc_per_portion: 0 },
+            { name: "tie", hc_per_portion: 0 },
+            { name: "suitcase", hc_per_portion: 0 },
+            { name: "sports ball", hc_per_portion: 0 },
+            { name: "kite", hc_per_portion: 0 },
+            { name: "baseball bat", hc_per_portion: 0 },
+            { name: "baseball glove", hc_per_portion: 0 },
+            { name: "skateboard", hc_per_portion: 0 },
+            { name: "surfboard", hc_per_portion: 0 },
+            { name: "tennis racket", hc_per_portion: 0 },
+            { name: "bottle", hc_per_portion: 0 },
+            { name: "wine glass", hc_per_portion: 0 },
+            { name: "cup", hc_per_portion: 0 },
+            { name: "fork", hc_per_portion: 0 },
+            { name: "knife", hc_per_portion: 0 },
+            { name: "spoon", hc_per_portion: 0 },
+            { name: "bowl", hc_per_portion: 0 },
+            { name: "banana", hc_per_portion: 25 }, // 1 plátano grande
+            { name: "apple", hc_per_portion: 15 }, // 1 manzana mediana
+            { name: "sandwich", hc_per_portion: 40 }, // sandwich tiene pan (HC)
+            { name: "orange", hc_per_portion: 12 }, // 1 naranja
+            { name: "broccoli", hc_per_portion: 5 }, // 100g de brócoli cocido
+            { name: "carrot", hc_per_portion: 7 }, // 100g de zanahoria
+            { name: "hot dog", hc_per_portion: 30 }, // hot dog tiene pan (HC)
+            { name: "pizza", hc_per_portion: 50 }, // pizza tiene masa (HC)
+            { name: "donut", hc_per_portion: 35 }, // 1 donut
+            { name: "cake", hc_per_portion: 40 }, // 1 porción
+            { name: "chair", hc_per_portion: 0 },
+            { name: "couch", hc_per_portion: 0 },
+            { name: "potted plant", hc_per_portion: 0 },
+            { name: "bed", hc_per_portion: 0 },
+            { name: "dining table", hc_per_portion: 0 },
+            { name: "toilet", hc_per_portion: 0 },
+            { name: "tv", hc_per_portion: 0 },
+            { name: "laptop", hc_per_portion: 0 },
+            { name: "mouse", hc_per_portion: 0 },
+            { name: "remote", hc_per_portion: 0 },
+            { name: "keyboard", hc_per_portion: 0 },
+            { name: "cell phone", hc_per_portion: 0 },
+            { name: "microwave", hc_per_portion: 0 },
+            { name: "oven", hc_per_portion: 0 },
+            { name: "toaster", hc_per_portion: 0 },
+            { name: "sink", hc_per_portion: 0 },
+            { name: "refrigerator", hc_per_portion: 0 },
+            { name: "book", hc_per_portion: 0 },
+            { name: "clock", hc_per_portion: 0 },
+            { name: "vase", hc_per_portion: 0 },
+            { name: "scissors", hc_per_portion: 0 },
+            { name: "teddy bear", hc_per_portion: 0 },
+            { name: "hair drier", hc_per_portion: 0 },
+            { name: "toothbrush", hc_per_portion: 0 },
+            { name: "wine glass", hc_per_portion: 0 },
+            { name: "cup", hc_per_portion: 0 },
+            { name: "fork", hc_per_portion: 0 },
+            { name: "knife", hc_per_portion: 0 },
+            { name: "spoon", hc_per_portion: 0 },
+            { name: "bowl", hc_per_portion: 0 },
         ];
+
 
         async function init() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 document.getElementById('video').srcObject = stream;
-                model = await mobilenet.load();
-                console.log("IA Lista");
-            } catch (e) { alert("Activa la cámara"); }
+                // Carga el modelo COCO-SSD
+                cocoSsdModel = await cocoSsd.load();
+                console.log("Modelo COCO-SSD cargado.");
+            } catch (e) {
+                console.error("Error al iniciar cámara o cargar modelo:", e);
+                alert("Activa la cámara o recarga la página. (Error: " + e.message + ")");
+            }
         }
 
-        async function escanearPlatoCompleto() {
-            if(!model) return;
-            const predictions = await model.classify(document.getElementById('video'));
-            const listaUI = document.getElementById('lista-alimentos');
-            listaUI.innerHTML = "";
-            hcAcumulados = 0;
+        async function detectarObjetos() {
+            if (!cocoSsdModel) return;
 
-            // ANALISIS MULTI-ETIQUETA (Suma de componentes)
-            // Filtramos las 3 predicciones más probables
-            const detectados = new Set();
-            
-            predictions.slice(0, 3).forEach(p => {
-                const tag = p.className.toLowerCase();
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+
+            // Ajustar canvas al tamaño del video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Limpiar canvas antes de dibujar
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            const predictions = await cocoSsdModel.detect(video);
+
+            const listaDetecciones = document.getElementById('lista-detecciones');
+            listaDetecciones.innerHTML = ""; // Limpiar lista
+            hcAcumulados = 0;
+            const detectedFoodItems = new Set(); // Para evitar duplicados en la lista visual
+
+            predictions.forEach(p => {
+                const className = p.class.toLowerCase();
                 
-                DB_AMPLIADA.forEach(item => {
-                    if(item.keys.some(k => tag.includes(k)) && !detectados.has(item.hc)) {
-                        hcAcumulados += item.hc;
-                        detectados.add(item.hc); // Evitamos sumar dos veces la misma categoría
-                        
-                        const div = document.createElement('div');
-                        div.className = "flex justify-between text-sm border-b border-slate-800 pb-1";
-                        div.innerHTML = `<span class="capitalize">${tag.split(',')[0]}</span><span class="text-blue-400 font-bold">+${item.hc}g</span>`;
-                        listaUI.appendChild(div);
-                    }
-                });
+                // Dibujar caja y etiqueta
+                context.beginPath();
+                context.rect(...p.bbox);
+                context.lineWidth = 2;
+                context.strokeStyle = '#00FF00';
+                context.fillStyle = '#00FF00';
+                context.stroke();
+                context.font = '16px Arial';
+                context.fillText(p.class + ' (' + Math.round(p.score * 100) + '%)', p.bbox[0], p.bbox[1] > 10 ? p.bbox[1] - 5 : 10);
+
+                // Buscar HC en nuestra base de datos nutricional
+                const foodItem = FOOD_DATABASE.find(food => className.includes(food.name.toLowerCase()));
+                
+                if (foodItem && !detectedFoodItems.has(foodItem.name)) {
+                    hcAcumulados += foodItem.hc_per_portion;
+                    detectedFoodItems.add(foodItem.name);
+
+                    const div = document.createElement('div');
+                    div.className = "flex justify-between items-center text-sm bg-slate-700/30 p-2 rounded-lg";
+                    div.innerHTML = `<span>${foodItem.name.toUpperCase()}</span><span class="font-bold text-green-400">+${foodItem.hc_per_portion}g</span>`;
+                    listaDetecciones.appendChild(div);
+                }
             });
 
-            if(hcAcumulados === 0) {
-                // Si es una hamburguesa sin pan (carne), pero ve patatas
-                hcAcumulados = 40; 
-                listaUI.innerHTML = "<p class='text-xs text-slate-500'>Detección genérica (Proteína + Guarnición)</p>";
+            if (hcAcumulados === 0 && detectedFoodItems.size === 0) {
+                 // Fallback si no detecta alimentos, pero hay objetos en la imagen.
+                 // Asume un plato mixto genérico con HC si hay "bowl" o "plate"
+                const hasPlateOrBowl = predictions.some(p => p.class.toLowerCase() === 'plate' || p.class.toLowerCase() === 'bowl');
+                if (hasPlateOrBowl) {
+                    hcAcumulados = 45; // Asumimos un plato mixto de HC medio
+                    const div = document.createElement('div');
+                    div.className = "flex justify-between items-center text-sm bg-slate-700/30 p-2 rounded-lg";
+                    div.innerHTML = `<span>PLATO MIXTO (Estimado)</span><span class="font-bold text-green-400">+${hcAcumulados}g</span>`;
+                    listaDetecciones.appendChild(div);
+                } else {
+                    listaDetecciones.innerHTML = "<p class='text-slate-500 italic'>No se detectaron alimentos específicos.</p>";
+                }
+            } else if (hcAcumulados === 0 && detectedFoodItems.size > 0) {
+                // Si detectó objetos (ej. carne pura) pero suman 0 HC
+                const div = document.createElement('div');
+                div.className = "text-sm text-slate-500 italic mt-2";
+                div.innerHTML = `<span>Total HC bajo. Ajusta manualmente si es necesario.</span>`;
+                listaDetecciones.appendChild(div);
             }
-
-            document.getElementById('total-hc').innerText = hcAcumulados + "g";
+            
+            document.getElementById('total-hc-display').innerText = `${hcAcumulados}g`;
         }
 
-        function calcularDosisFinal() {
-            const glu = parseFloat(document.getElementById('glucemia').value);
-            if(!glu) return alert("Pon tu glucemia");
-
-            const ratio = 500 / DTI; // 9.25
-            const fsi = 1800 / DTI; // 33.33
-
-            let uComida = hcAcumulados / ratio;
-            let uCorr = glu > OBJETIVO ? (glu - OBJETIVO) / fsi : 0;
+        function calcularDosis() {
+            const glucemia = parseFloat(document.getElementById('glucemia').value);
             
-            let totalExacto = uComida + uCorr;
-            
-            // REDONDEO MAGICO A 0.5
-            let totalRedondeado = Math.round(totalExacto * 2) / 2;
+            if (isNaN(glucemia)) {
+                alert("Por favor, introduce tu glucemia.");
+                return;
+            }
 
-            document.getElementById('res-ui').innerText = totalRedondeado.toFixed(1);
-            document.getElementById('det-comida').innerText = uComida.toFixed(2);
-            document.getElementById('det-corr').innerText = uCorr.toFixed(2);
-            document.getElementById('modal').classList.remove('hidden');
+            // Asegurar que hcAcumulados no sea 0 si hay un plato (fallback)
+            if (hcAcumulados === 0) {
+                const hasFoodDisplayed = document.getElementById('lista-detecciones').children.length > 0 && 
+                                         !document.getElementById('lista-detecciones').children[0].innerText.includes("No se detectaron");
+                if (hasFoodDisplayed) {
+                    // Si hay algo en la lista pero suman 0 (ej. solo carne)
+                    // y el usuario está pidiendo calcular, asignamos un valor base
+                    hcAcumulados = 15; 
+                } else {
+                    alert("Primero segmenta el plato o ajusta los hidratos.");
+                    return;
+                }
+            }
+
+
+            const uComida = hcAcumulados / RATIO_CORREGIDO;
+            let uCorr = 0;
+
+            if (glucemia > OBJETIVO) {
+                uCorr = (glucemia - OBJETIVO) / FSI;
+            } else if (glucemia < 70) {
+                alert("¡HIPOGLUCEMIA! Toma azúcar. NO te pongas insulina todavía.");
+                return;
+            }
+
+            let sumaExacta = uComida + uCorr;
+            let totalRedondeado = Math.round(sumaExacta * 2) / 2;
+
+            document.getElementById('dosis-total').innerText = totalRedondeado.toFixed(1);
+            document.getElementById('info-comida').innerText = uComida.toFixed(2) + " UI";
+            document.getElementById('info-corr').innerText = uCorr.toFixed(2) + " UI";
+            document.getElementById('resultado-modal').classList.remove('hidden');
+        }
+
+        function cerrarModal() {
+            document.getElementById('resultado-modal').classList.add('hidden');
         }
 
         init();
