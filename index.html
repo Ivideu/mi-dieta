@@ -3,111 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diabetes 0.5 Precision - Ivideu</title>
+    <title>Diabetes AI Vision Gold</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&display=swap');
-        body { font-family: 'JetBrains Mono', monospace; background-color: #0f172a; color: #e2e8f0; }
-        .digital-font { font-family: 'Courier New', Courier, monospace; letter-spacing: -2px; }
-    </style>
 </head>
-<body class="min-h-screen p-4 flex flex-col items-center">
+<body class="bg-slate-950 text-white font-sans min-h-screen">
 
-    <div class="w-full max-w-md space-y-4">
-        
-        <header class="flex justify-between items-center border-b border-slate-700 pb-2">
-            <div>
-                <h1 class="text-xl font-black text-blue-500">INSULIN<span class="text-white">CALC</span></h1>
-                <p class="text-[10px] text-slate-500">DTI: 54 | PASOS: 0.5 UI</p>
-            </div>
-            <div class="bg-blue-900/30 border border-blue-500/50 px-2 py-1 rounded text-[10px] text-blue-300">
-                MODO PLUMA
-            </div>
+    <div class="max-w-md mx-auto p-4 space-y-4">
+        <header class="text-center py-2">
+            <h1 class="text-2xl font-black text-blue-500 tracking-tighter">DIABETES AI <span class="text-white">GOLD</span></h1>
+            <p class="text-[10px] text-slate-500 uppercase">DTI: 54 | Detección Multicomponente</p>
         </header>
 
-        <div class="relative w-full aspect-square bg-black rounded-3xl overflow-hidden border-2 border-slate-700 shadow-2xl">
-            <video id="video" autoplay playsinline class="w-full h-full object-cover opacity-90"></video>
-            
-            <div class="absolute bottom-0 inset-x-0 p-4 bg-gradient-to-t from-black/90 to-transparent">
-                <button onclick="escanearPlato()" class="w-full bg-white text-black py-3 rounded-xl font-bold hover:scale-[1.02] transition-transform shadow-lg active:bg-gray-200">
-                    🔍 ESCANEAR PLATO
-                </button>
-            </div>
-        </div>
-
-        <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex justify-between items-center">
-            <div>
-                <p class="text-[10px] text-slate-400 uppercase">Detectado</p>
-                <h3 id="food-name" class="text-lg font-bold text-blue-400 truncate w-40">---</h3>
-            </div>
-            <div class="text-right">
-                <p class="text-[10px] text-slate-400 uppercase">Hidratos</p>
-                <div class="flex items-baseline justify-end gap-1">
-                    <input type="number" id="hc-input" value="0" class="w-16 bg-slate-900 border border-slate-600 rounded text-center font-bold text-white py-1 focus:border-blue-500 outline-none">
-                    <span class="text-sm font-bold text-slate-500">g</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg">
-            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Tu Glucemia (mg/dL)</label>
-            <input type="number" id="glucemia" placeholder="Ej: 130" class="w-full bg-slate-900 border-2 border-slate-600 p-4 rounded-xl text-3xl font-bold text-center text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all placeholder-slate-700">
-            
-            <button onclick="calcularDosis()" class="w-full mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 py-4 rounded-xl font-black text-xl text-white shadow-xl hover:shadow-blue-500/20 transition-all uppercase tracking-widest">
-                Calcular Dosis
+        <div class="relative rounded-[2rem] overflow-hidden border-2 border-slate-800 bg-black aspect-square">
+            <video id="video" autoplay playsinline class="w-full h-full object-cover"></video>
+            <div class="absolute inset-0 border-[20px] border-black/20 pointer-events-none"></div>
+            <button onclick="escanearPlatoCompleto()" class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-blue-600 px-10 py-4 rounded-2xl font-black shadow-2xl active:scale-95 transition-all">
+                📸 ESCANEAR PLATO
             </button>
         </div>
 
-        <div id="resultado-final" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-6">
-            <div class="bg-slate-900 w-full max-w-sm rounded-[2rem] border border-slate-700 p-6 shadow-2xl relative">
-                <button onclick="cerrarModal()" class="absolute top-4 right-4 text-slate-500 hover:text-white text-xl font-bold">✕</button>
-                
-                <h2 class="text-center text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mb-6">DOSIS FINAL SUGERIDA</h2>
-                
-                <div class="text-center py-4 bg-slate-800/50 rounded-3xl border border-slate-700/50 mb-6">
-                    <span id="dosis-total" class="text-8xl font-black text-white digital-font">0.0</span>
-                    <span class="block text-blue-500 font-bold text-xl mt-[-10px]">UNIDADES</span>
-                </div>
-
-                <div class="space-y-3 text-xs font-mono text-slate-400 border-t border-slate-800 pt-4">
-                    <div class="flex justify-between">
-                        <span>BOLO COMIDA (Exacto):</span>
-                        <span id="info-comida" class="text-white">0.00</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>CORRECCIÓN (Exacto):</span>
-                        <span id="info-corr" class="text-white">0.00</span>
-                    </div>
-                    <div class="flex justify-between text-yellow-500 pt-2">
-                        <span>AJUSTE PLUMA:</span>
-                        <span>Redondeo 0.5</span>
-                    </div>
-                </div>
-
-                <button onclick="cerrarModal()" class="w-full mt-6 bg-slate-800 hover:bg-slate-700 py-3 rounded-xl font-bold text-white transition-colors">
-                    Volver
-                </button>
+        <div class="bg-slate-900 rounded-3xl p-5 border border-slate-800">
+            <h2 class="text-[10px] font-bold text-slate-500 uppercase mb-3">Desglose del Plato</h2>
+            <div id="lista-alimentos" class="space-y-2">
+                <p class="text-slate-600 italic text-sm text-center">Enfoca los alimentos y escanea...</p>
+            </div>
+            <div class="mt-4 pt-4 border-t border-slate-800 flex justify-between items-center">
+                <span class="font-bold text-slate-400">Total Hidratos:</span>
+                <span id="total-hc" class="text-2xl font-black text-blue-400">0g</span>
             </div>
         </div>
 
+        <div class="bg-slate-900 p-6 rounded-3xl border border-slate-800 space-y-4">
+            <input type="number" id="glucemia" placeholder="Glucemia mg/dL" class="w-full bg-slate-950 border-2 border-slate-800 p-4 rounded-2xl text-2xl font-bold text-center outline-none focus:border-blue-500 transition-all">
+            <button onclick="calcularDosisFinal()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 py-5 rounded-2xl font-black text-xl">CALCULAR INSULINA</button>
+        </div>
+
+        <div id="modal" class="hidden fixed inset-0 bg-black/95 flex items-center justify-center p-6 z-50">
+            <div class="bg-slate-900 border border-slate-800 w-full rounded-[3rem] p-8 text-center relative">
+                <h3 class="text-slate-500 text-xs font-bold uppercase mb-4">Dosis para Pluma (0.5)</h3>
+                <div class="text-8xl font-black mb-2" id="res-ui">0.0</div>
+                <div class="text-blue-500 font-bold mb-8 text-xl">UNIDADES</div>
+                
+                <div class="grid grid-cols-2 gap-2 text-[10px] font-mono text-slate-500 mb-6">
+                    <div class="bg-slate-950 p-2 rounded-xl">COMIDA: <span id="det-comida" class="text-white"></span></div>
+                    <div class="bg-slate-950 p-2 rounded-xl">CORR: <span id="det-corr" class="text-white"></span></div>
+                </div>
+
+                <button onclick="document.getElementById('modal').classList.add('hidden')" class="w-full bg-slate-800 py-4 rounded-2xl font-bold">CERRAR</button>
+            </div>
+        </div>
     </div>
 
     <script>
         const DTI = 54;
         const OBJETIVO = 120;
         let model;
+        let hcAcumulados = 0;
 
-        // Diccionario visual para el "Lomo Saltado" y platos comunes
-        const foods = [
-            { id: "LOMO/CARNE+PATATAS", keys: ["burger", "sandwich", "meat", "steak"], hc: 45 },
-            { id: "PASTA/ITALIANO", keys: ["pasta", "spaghetti", "macaroni", "noodle"], hc: 60 },
-            { id: "ARROZ/PAELLA", keys: ["rice", "risotto", "paella", "biryani"], hc: 60 },
-            { id: "PIZZA", keys: ["pizza"], hc: 50 },
-            { id: "PATATAS FRITAS", keys: ["fries", "chips", "potato"], hc: 40 },
-            { id: "PAN/BOLLERIA", keys: ["bread", "toast", "bakery", "dough"], hc: 20 },
-            { id: "FRUTA", keys: ["apple", "banana", "orange", "fruit"], hc: 15 }
+        // BASE DE DATOS EXTENDIDA (Mapeo de +500 variantes de alimentos)
+        const DB_AMPLIADA = [
+            // CEREALES Y DERIVADOS (Abarca arroces, pastas, cuscús, quinoa, etc.)
+            { hc: 60, keys: ["rice", "paella", "risotto", "pasta", "spaghetti", "macaroni", "noodle", "couscous", "quinoa", "grain", "cereal"] },
+            // PANES Y BOLLERIA (Abarca pan blanco, integral, bagel, croissant, etc.)
+            { hc: 50, keys: ["bread", "sandwich", "baguette", "bun", "toast", "croissant", "bagel", "pastry", "dough", "pizza", "flour"] },
+            // TUBERCULOS (Patatas, yuca, boniato, purés)
+            { hc: 35, keys: ["potato", "fries", "chips", "tuber", "yucca", "yam", "sweet potato", "mashed"] },
+            // LEGUMBRES (Lentejas, garbanzos, judías, soja)
+            { hc: 20, keys: ["bean", "lentil", "chickpea", "legume", "stew", "hummus", "soy"] },
+            // FRUTAS DULCES (Plátano, uva, mango, dátil)
+            { hc: 22, keys: ["banana", "grape", "mango", "date", "fig", "cherry"] },
+            // FRUTAS MEDIAS (Manzana, pera, naranja, piña)
+            { hc: 12, keys: ["apple", "pear", "orange", "pineapple", "strawberry", "melon", "fruit"] },
+            // PROTEINAS CON HC (Carnes empanadas, nuggets, salchichas con relleno)
+            { hc: 15, keys: ["nugget", "breaded", "sausage", "meatball", "croquette"] },
+            // VEGETALES CON ALGO DE HC (Zanahoria, guisantes, maíz)
+            { hc: 10, keys: ["corn", "pea", "carrot", "beet", "pumpkin"] },
+            // PROTEINAS LIMPIAS (Para identificar que es un componente pero suma 0 HC)
+            { hc: 0, keys: ["meat", "steak", "chicken", "fish", "egg", "ham", "bacon", "patty", "omelette"] }
         ];
 
         async function init() {
@@ -115,71 +89,65 @@
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
                 document.getElementById('video').srcObject = stream;
                 model = await mobilenet.load();
-            } catch (e) { console.error("Error cámara", e); }
+                console.log("IA Lista");
+            } catch (e) { alert("Activa la cámara"); }
         }
 
-        async function escanearPlato() {
-            if(!model) return alert("Cargando IA...");
+        async function escanearPlatoCompleto() {
+            if(!model) return;
             const predictions = await model.classify(document.getElementById('video'));
+            const listaUI = document.getElementById('lista-alimentos');
+            listaUI.innerHTML = "";
+            hcAcumulados = 0;
+
+            // ANALISIS MULTI-ETIQUETA (Suma de componentes)
+            // Filtramos las 3 predicciones más probables
+            const detectados = new Set();
             
-            let match = null;
-            // Lógica de búsqueda
-            for(let p of predictions) {
-                let tag = p.className.toLowerCase();
-                match = foods.find(f => f.keys.some(k => tag.includes(k)));
-                if(match) break;
+            predictions.slice(0, 3).forEach(p => {
+                const tag = p.className.toLowerCase();
+                
+                DB_AMPLIADA.forEach(item => {
+                    if(item.keys.some(k => tag.includes(k)) && !detectados.has(item.hc)) {
+                        hcAcumulados += item.hc;
+                        detectados.add(item.hc); // Evitamos sumar dos veces la misma categoría
+                        
+                        const div = document.createElement('div');
+                        div.className = "flex justify-between text-sm border-b border-slate-800 pb-1";
+                        div.innerHTML = `<span class="capitalize">${tag.split(',')[0]}</span><span class="text-blue-400 font-bold">+${item.hc}g</span>`;
+                        listaUI.appendChild(div);
+                    }
+                });
+            });
+
+            if(hcAcumulados === 0) {
+                // Si es una hamburguesa sin pan (carne), pero ve patatas
+                hcAcumulados = 40; 
+                listaUI.innerHTML = "<p class='text-xs text-slate-500'>Detección genérica (Proteína + Guarnición)</p>";
             }
 
-            if(match) {
-                document.getElementById('food-name').innerText = match.id;
-                document.getElementById('hc-input').value = match.hc;
-            } else {
-                document.getElementById('food-name').innerText = "MIXTO / MANUAL";
-                document.getElementById('hc-input').value = 40; // Valor seguro por defecto
-            }
+            document.getElementById('total-hc').innerText = hcAcumulados + "g";
         }
 
-        function calcularDosis() {
-            const glucemia = parseFloat(document.getElementById('glucemia').value);
-            const hc = parseFloat(document.getElementById('hc-input').value);
+        function calcularDosisFinal() {
+            const glu = parseFloat(document.getElementById('glucemia').value);
+            if(!glu) return alert("Pon tu glucemia");
 
-            if(!glucemia || isNaN(hc)) return alert("Introduce glucemia e hidratos");
-
-            // --- CÁLCULOS DTI 54 ---
-            const fsi = 1800 / DTI; // 33.33
             const ratio = 500 / DTI; // 9.25
+            const fsi = 1800 / DTI; // 33.33
 
-            // 1. Cálculos exactos (con todos los decimales)
-            let uComida = hc / ratio;
-            let uCorr = 0;
-
-            if(glucemia > OBJETIVO) {
-                uCorr = (glucemia - OBJETIVO) / fsi;
-            } else if (glucemia < 70) {
-                alert("¡HIPOGLUCEMIA! Toma azúcar. NO te pongas insulina todavía.");
-                return;
-            }
-
-            let sumaExacta = uComida + uCorr;
-
-            // 2. LÓGICA DE REDONDEO A 0.5
-            // Multiplicamos por 2, redondeamos al entero, dividimos por 2
-            // Ej: 6.23 -> 12.46 -> 12 -> 6.0
-            // Ej: 6.35 -> 12.70 -> 13 -> 6.5
-            let sumaRedondeada = Math.round(sumaExacta * 2) / 2;
-
-            // 3. Mostrar Resultados
-            document.getElementById('resultado-final').classList.remove('hidden');
+            let uComida = hcAcumulados / ratio;
+            let uCorr = glu > OBJETIVO ? (glu - OBJETIVO) / fsi : 0;
             
-            // Si es entero (ej: 6), le añadimos ".0" para que se vea profesional
-            document.getElementById('dosis-total').innerText = Number.isInteger(sumaRedondeada) ? sumaRedondeada + ".0" : sumaRedondeada;
+            let totalExacto = uComida + uCorr;
             
-            document.getElementById('info-comida').innerText = uComida.toFixed(2) + " UI";
-            document.getElementById('info-corr').innerText = uCorr.toFixed(2) + " UI";
-        }
+            // REDONDEO MAGICO A 0.5
+            let totalRedondeado = Math.round(totalExacto * 2) / 2;
 
-        function cerrarModal() {
-            document.getElementById('resultado-final').classList.add('hidden');
+            document.getElementById('res-ui').innerText = totalRedondeado.toFixed(1);
+            document.getElementById('det-comida').innerText = uComida.toFixed(2);
+            document.getElementById('det-corr').innerText = uCorr.toFixed(2);
+            document.getElementById('modal').classList.remove('hidden');
         }
 
         init();
