@@ -3,108 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DiabetesAI - Calculadora Inteligente</title>
+    <title>Diabetes Helper - Ivideu</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+    <style>
+        .card { background: white; border-radius: 1rem; shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        input:focus { border-color: #2563eb; outline: none; ring: 2px #bfdbfe; }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4">
+<body class="bg-slate-50 min-h-screen p-4 font-sans text-slate-900">
 
-    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6">
-        <h1 class="text-2xl font-bold text-blue-600 mb-4 text-center">Diabetes Helper AI</h1>
-        
-        <div class="relative bg-black rounded-lg h-48 mb-4 flex items-center justify-center overflow-hidden">
-            <video id="webcam" autoplay playsinline class="absolute w-full h-full object-cover"></video>
-            <canvas id="canvas" class="hidden"></canvas>
-            <button onclick="analizarPlato()" class="relative z-10 bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 shadow-lg">
-                📸 Analizar Plato
-            </button>
-        </div>
+    <div class="max-w-md mx-auto space-y-4">
+        <header class="text-center py-4">
+            <h1 class="text-3xl font-extrabold text-blue-600">DiabetCalc AI</h1>
+            <p class="text-slate-500 text-sm">Cálculo basado en Reglas 1800 y 500</p>
+        </header>
 
-        <div id="deteccion" class="text-sm text-gray-500 mb-4 text-center italic">Esperando cámara...</div>
-
-        <div class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium">Glucemia Actual (mg/dL)</label>
-                <input type="number" id="glucemia" placeholder="Ej: 180" class="w-full border p-2 rounded">
-            </div>
-            
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Configuración Personal</h2>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium">DTI (Dosis Total)</label>
-                    <input type="number" id="dti" value="40" class="w-full border p-2 rounded">
+                    <label class="block text-xs font-semibold mb-1">DTI (Insulina Total/Día)</label>
+                    <input type="number" id="dti" value="40" class="w-full border border-slate-300 p-2 rounded-lg bg-slate-50">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium">Gramos HC</label>
-                    <input type="number" id="gramos" placeholder="Ej: 40" class="w-full border p-2 rounded">
+                    <label class="block text-xs font-semibold mb-1">Objetivo (mg/dL)</label>
+                    <input type="number" id="objetivo" value="120" class="w-full border border-slate-300 p-2 rounded-lg bg-slate-50">
                 </div>
             </div>
-
-            <button onclick="calcular()" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg mt-4 shadow-md">
-                CALCULAR INSULINA
-            </button>
         </div>
 
-        <div id="resultado" class="mt-6 p-4 bg-blue-50 rounded-lg hidden">
-            <h2 class="font-bold text-lg border-b border-blue-200 mb-2">Dosis Recomendada</h2>
-            <div id="detalle-resultado" class="text-gray-700 space-y-1"></div>
+        <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-blue-500">
+            <h2 class="text-lg font-bold mb-4">Datos Actuales</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Glucemia Actual (mg/dL)</label>
+                    <input type="number" id="glucemia" placeholder="Ej: 160" class="w-full text-lg border-slate-300 p-3 rounded-xl border">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-1 text-blue-700">Gramos de Hidratos (HC)</label>
+                    <input type="number" id="gramos" placeholder="Ej: 50" class="w-full text-lg border-blue-200 p-3 rounded-xl border bg-blue-50">
+                    <p class="text-[10px] text-slate-400 mt-1">* 10g de HC = 1 Ración</p>
+                </div>
+
+                <button onclick="calcularDosis()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg active:scale-95">
+                    CALCULAR DOSIS
+                </button>
+            </div>
         </div>
+
+        <div id="resultado" class="hidden transform transition-all">
+            <div class="bg-white p-6 rounded-2xl shadow-xl border-2 border-green-500 relative overflow-hidden">
+                <div id="alerta-hipo" class="hidden bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm font-bold">
+                    ⚠️ ¡GLUCEMIA BAJA! Aplica regla del 15.
+                </div>
+
+                <div class="flex justify-between items-end mb-4">
+                    <div>
+                        <p class="text-slate-500 text-sm">Dosis Total Recomendada</p>
+                        <h2 id="total-ui" class="text-5xl font-black text-green-600">0.0 <span class="text-xl">UI</span></h2>
+                    </div>
+                    <div class="text-right">
+                        <p id="txt-raciones" class="text-lg font-bold text-slate-700">0 Raciones</p>
+                    </div>
+                </div>
+
+                <div class="border-t pt-4 space-y-2 text-sm text-slate-600">
+                    <div class="flex justify-between">
+                        <span>Bolo por Comida (Ratio):</span>
+                        <span id="ui-comida" class="font-mono font-bold">0.0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Bolo Corrector (FSI):</span>
+                        <span id="ui-correccion" class="font-mono font-bold">0.0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-[10px] text-slate-400 text-center px-4">
+            ADVERTENCIA: Esta app es un prototipo. Los cálculos deben ser supervisados por un médico. No tomes decisiones médicas basadas únicamente en esta herramienta.
+        </p>
     </div>
 
     <script>
-        let model;
-        const video = document.getElementById('webcam');
-
-        // Cargar Cámara e IA
-        async function setupApp() {
-            model = await mobilenet.load();
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-            video.srcObject = stream;
-            document.getElementById('deteccion').innerText = "IA Lista. Enfoca tu comida.";
-        }
-
-        async function analizarPlato() {
-            const predictions = await model.classify(video);
-            // Tomamos la primera predicción
-            const comida = predictions[0].className;
-            document.getElementById('deteccion').innerText = "Detectado: " + comida;
-            // Aquí se conectaría con el JSON de raciones para autocompletar
-            alert("He detectado " + comida + ". Por seguridad, confirma los gramos de HC manualmente.");
-        }
-
-        function calcular() {
-            const glucemia = parseFloat(document.getElementById('glucemia').value);
+        function calcularDosis() {
+            // Captura de datos
             const dti = parseFloat(document.getElementById('dti').value);
-            const hc = parseFloat(document.getElementById('gramos').value);
-            const objetivo = 120; // Valor estándar pág 10
+            const objetivo = parseFloat(document.getElementById('objetivo').value);
+            const glucemia = parseFloat(document.getElementById('glucemia').value);
+            const gramos = parseFloat(document.getElementById('gramos').value);
 
-            if(!glucemia || !dti || !hc) return alert("Rellena los datos");
+            if (!dti || !glucemia || isNaN(gramos)) {
+                alert("Por favor, introduce los datos necesarios.");
+                return;
+            }
 
-            // FÓRMULAS DEL PDF (Pág 10-11)
-            const fsi = 1800 / dti; // Factor Sensibilidad
-            const ratio = 500 / dti; // Gramos que cubre 1 unidad
+            // --- FÓRMULAS DEL PDF ---
             
-            const unidadesComida = hc / ratio;
-            const unidadesCorreccion = glucemia > objetivo ? (glucemia - objetivo) / fsi : 0;
-            const total = unidadesComida + unidadesCorreccion;
+            // 1. Convertir gramos a raciones (1 Ración = 10g)
+            const raciones = gramos / 10;
 
-            const resDiv = document.getElementById('resultado');
-            const detDiv = document.getElementById('detalle-resultado');
+            // 2. Factor de Sensibilidad (FSI) - Regla 1800
+            // Cuánto baja 1 unidad de insulina la glucosa
+            const fsi = 1800 / dti;
+
+            // 3. Ratio Insulina/Ración - Regla 500
+            // Cuántas unidades se necesitan por cada ración (10g)
+            // (10 / (500 / DTI))
+            const uiPorRacion = 10 / (500 / dti);
+
+            // 4. Cálculos de Bolo
+            const boloComida = raciones * uiPorRacion;
             
-            resDiv.classList.remove('hidden');
-            detDiv.innerHTML = `
-                <p>Raciones: <b>${(hc/10).toFixed(1)} R</b></p>
-                <p>Bolo Comida: <b>${unidadesComida.toFixed(1)} UI</b></p>
-                <p>Bolo Corrector: <b>${unidadesCorreccion.toFixed(1)} UI</b></p>
-                <p class="text-xl mt-2 text-blue-800">TOTAL: <b>${total.toFixed(1)} Unidades</b></p>
-            `;
+            let boloCorrector = 0;
+            if (glucemia > objetivo) {
+                boloCorrector = (glucemia - objetivo) / fsi;
+            }
 
-            if(glucemia < 70) {
-                alert("¡AVISO! Glucemia baja. Sigue la regla del 15 del PDF.");
+            const total = boloComida + boloCorrector;
+
+            // --- MOSTRAR RESULTADOS ---
+            document.getElementById('resultado').classList.remove('hidden');
+            document.getElementById('total-ui').innerHTML = `${total.toFixed(1)} <span class="text-xl">UI</span>`;
+            document.getElementById('txt-raciones').innerText = `${raciones.toFixed(1)} Raciones`;
+            document.getElementById('ui-comida').innerText = `${boloComida.toFixed(1)} UI`;
+            document.getElementById('ui-correccion').innerText = `${boloCorrector.toFixed(1)} UI`;
+
+            // Alerta de Hipoglucemia
+            const alertaHipo = document.getElementById('alerta-hipo');
+            if (glucemia < 70) {
+                alertaHipo.classList.remove('hidden');
+            } else {
+                alertaHipo.classList.add('hidden');
+            }
+
+            // Límite de seguridad para evitar errores de escritura
+            if (total > 15) {
+                alert("⚠️ AVISO: El cálculo supera las 15 unidades. Revisa si has puesto bien los gramos de Hidratos de Carbono.");
             }
         }
-
-        setupApp();
     </script>
 </body>
 </html>
