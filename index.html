@@ -2,11 +2,32 @@
 <html>
 <head>
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="manifest" href="manifest.json">
+<title>Diabetes IA</title>
 
-<title>Calculadora Diabetes IA</title>
+<style>
+
+body{
+font-family: Arial;
+text-align: center;
+background:#f4f4f4;
+}
+
+video, canvas{
+width:90%;
+max-width:400px;
+border-radius:10px;
+margin:10px;
+}
+
+button{
+padding:15px;
+font-size:18px;
+margin:10px;
+}
+
+</style>
 
 </head>
 
@@ -14,24 +35,29 @@
 
 <h2>Calculadora Diabetes IA</h2>
 
-<video id="video" autoplay playsinline width="300"></video>
+<video id="video" autoplay playsinline></video>
 
-<br><br>
+<canvas id="canvas" style="display:none;"></canvas>
 
-<button onclick="tomarFoto()">Capturar alimento</button>
+<br>
 
-<br><br>
+<button onclick="capturar()">Capturar alimento</button>
+
+<br>
 
 Glucosa actual:
+
 <input type="number" id="glucose">
 
-<br><br>
+<br>
 
-<button onclick="calcularInsulina()">Calcular</button>
+<button onclick="calcular()">Calcular insulina</button>
 
 <h3 id="resultado"></h3>
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
 
 <script src="app.js"></script>
 
