@@ -3,27 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diabetes Helper - Ivideu</title>
+    <title>Diabetes Helper - Ivideu AI Cam</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.13.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
     <style>
-        .card { background: white; border-radius: 1rem; shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-        input:focus { border-color: #2563eb; outline: none; ring: 2px #bfdbfe; }
+        body { font-family: 'Inter', sans-serif; }
+        input:focus, button:focus { outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.45); }
+        .camera-container {
+            position: relative;
+            width: 100%;
+            padding-top: 75%; /* 4:3 Aspect Ratio */
+            background-color: #000;
+            border-radius: 1.5rem;
+            overflow: hidden;
+        }
+        .camera-video {
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Reflejo para que parezca un espejo */
+        }
+        .camera-overlay {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .camera-button {
+            background-color: #3b82f6; /* blue-500 */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.2s;
+        }
+        .camera-button:hover { background-color: #2563eb; /* blue-600 */ }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen p-4 font-sans text-slate-900">
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-4 text-slate-800">
 
-    <div class="max-w-md mx-auto space-y-4">
+    <div class="max-w-md mx-auto space-y-6">
         <header class="text-center py-4">
-            <h1 class="text-3xl font-extrabold text-blue-600">DiabetCalc AI</h1>
-            <p class="text-slate-500 text-sm">Cálculo basado en Reglas 1800 y 500</p>
+            <h1 class="text-3xl font-extrabold text-blue-700">Diabetes AI Cam</h1>
+            <p class="text-slate-500 text-sm">Cálculo inteligente con visión artificial</p>
         </header>
 
+        <div class="bg-white p-4 rounded-3xl shadow-xl border border-blue-200">
+            <h2 class="text-lg font-bold mb-4 text-blue-600">¿Qué vas a comer?</h2>
+            <div class="camera-container mb-4">
+                <video id="webcam" autoplay playsinline class="camera-video"></video>
+                <canvas id="canvas" class="hidden"></canvas>
+                <div class="camera-overlay">
+                    <button id="captureButton" class="camera-button">
+                        📸 Detectar Plato
+                    </button>
+                </div>
+            </div>
+            <p id="detection-status" class="text-center text-sm text-slate-600 italic mb-2">Cargando IA...</p>
+            <p id="estimated-hc" class="text-center text-lg font-semibold text-green-700 hidden">
+                HC Estimados: <span id="hc-value">0</span>g
+            </p>
+            <p class="text-xs text-red-500 text-center mt-2">
+                ⚠️ **¡IMPORTANTE!** La IA estima los HC. Confirma los gramos o las raciones con tu médico.
+            </p>
+        </div>
+
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Configuración Personal</h2>
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Mi Configuración</h2>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-semibold mb-1">DTI (Insulina Total/Día)</label>
-                    <input type="number" id="dti" value="40" class="w-full border border-slate-300 p-2 rounded-lg bg-slate-50">
+                    <label class="block text-xs font-semibold mb-1">DTI (Total Insulina/Día)</label>
+                    <input type="number" id="dti" value="54" readonly class="w-full border border-slate-300 p-2 rounded-lg bg-slate-100 text-slate-600 cursor-not-allowed">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold mb-1">Objetivo (mg/dL)</label>
@@ -33,43 +90,34 @@
         </div>
 
         <div class="bg-white p-6 rounded-2xl shadow-md border-t-4 border-blue-500">
-            <h2 class="text-lg font-bold mb-4">Datos Actuales</h2>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Glucemia Actual (mg/dL)</label>
-                    <input type="number" id="glucemia" placeholder="Ej: 160" class="w-full text-lg border-slate-300 p-3 rounded-xl border">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium mb-1 text-blue-700">Gramos de Hidratos (HC)</label>
-                    <input type="number" id="gramos" placeholder="Ej: 50" class="w-full text-lg border-blue-200 p-3 rounded-xl border bg-blue-50">
-                    <p class="text-[10px] text-slate-400 mt-1">* 10g de HC = 1 Ración</p>
-                </div>
-
-                <button onclick="calcularDosis()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg active:scale-95">
-                    CALCULAR DOSIS
-                </button>
+            <h2 class="text-lg font-bold mb-4 text-blue-600">Mi Glucemia Actual</h2>
+            <div>
+                <label class="block text-sm font-medium mb-1">Glucemia Actual (mg/dL)</label>
+                <input type="number" id="glucemia" placeholder="Ej: 160" class="w-full text-lg border-slate-300 p-3 rounded-xl border">
             </div>
+
+            <button onclick="calcularDosis()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg active:scale-95 mt-6">
+                CALCULAR DOSIS MANUAL
+            </button>
         </div>
 
-        <div id="resultado" class="hidden transform transition-all">
+        <div id="resultado" class="hidden transform transition-all duration-300 ease-in-out">
             <div class="bg-white p-6 rounded-2xl shadow-xl border-2 border-green-500 relative overflow-hidden">
-                <div id="alerta-hipo" class="hidden bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm font-bold">
+                <div id="alerta-hipo" class="hidden bg-red-100 text-red-700 p-3 rounded-lg mb-4 text-sm font-bold animate-pulse">
                     ⚠️ ¡GLUCEMIA BAJA! Aplica regla del 15.
                 </div>
 
                 <div class="flex justify-between items-end mb-4">
                     <div>
                         <p class="text-slate-500 text-sm">Dosis Total Recomendada</p>
-                        <h2 id="total-ui" class="text-5xl font-black text-green-600">0.0 <span class="text-xl">UI</span></h2>
+                        <h2 id="total-ui" class="text-5xl font-black text-green-700">0.0 <span class="text-xl">UI</span></h2>
                     </div>
                     <div class="text-right">
-                        <p id="txt-raciones" class="text-lg font-bold text-slate-700">0 Raciones</p>
+                        <p class="text-lg font-bold text-slate-700" id="txt-raciones">0 Raciones</p>
                     </div>
                 </div>
 
-                <div class="border-t pt-4 space-y-2 text-sm text-slate-600">
+                <div class="border-t border-slate-200 pt-4 space-y-2 text-sm text-slate-600">
                     <div class="flex justify-between">
                         <span>Bolo por Comida (Ratio):</span>
                         <span id="ui-comida" class="font-mono font-bold">0.0</span>
@@ -88,15 +136,115 @@
     </div>
 
     <script>
+        // --- CONFIGURACIÓN DE IA Y ALIMENTOS ---
+        let mobileNetModel;
+        const webcam = document.getElementById('webcam');
+        const captureButton = document.getElementById('captureButton');
+        const detectionStatus = document.getElementById('detection-status');
+        const estimatedHcDisplay = document.getElementById('estimated-hc');
+        const hcValueSpan = document.getElementById('hc-value');
+
+        // Base de datos simplificada de alimentos con HC por 100g (extraído de tu PDF y valores comunes)
+        // Usaremos un "peso_estimado_g" como base, pero el usuario debe ser consciente de la imprecisión.
+        const foodDatabase = [
+            { name: "rice", keywords: ["rice", "arroz"], hc_100g: 28, peso_estimado_g: 150 }, // Arroz cocido
+            { name: "bread", keywords: ["bread", "pan", "tostada"], hc_100g: 50, peso_estimado_g: 50 }, // Pan
+            { name: "apple", keywords: ["apple", "manzana"], hc_100g: 14, peso_estimado_g: 150 }, // Manzana
+            { name: "potato", keywords: ["potato", "patata", "papas"], hc_100g: 17, peso_estimado_g: 100 }, // Patata cocida
+            { name: "pasta", keywords: ["pasta", "espagueti", "macarrones"], hc_100g: 30, peso_estimado_g: 150 }, // Pasta cocida
+            { name: "milk", keywords: ["milk", "leche"], hc_100g: 5, peso_estimado_g: 200 }, // Leche
+            { name: "yogurt", keywords: ["yogurt", "yogur"], hc_100g: 5, peso_estimado_g: 125 }, // Yogur
+            { name: "banana", keywords: ["banana", "platano"], hc_100g: 23, peso_estimado_g: 120 }, // Plátano
+            { name: "orange", keywords: ["orange", "naranja"], hc_100g: 12, peso_estimado_g: 150 }, // Naranja
+            { name: "lentils", keywords: ["lentils", "lentejas"], hc_100g: 15, peso_estimado_g: 100 }, // Lentejas cocidas
+            { name: "chickpeas", keywords: ["chickpeas", "garbanzos"], hc_100g: 18, peso_estimado_g: 100 }, // Garbanzos cocidos
+        ];
+
+        let estimatedHC = 0; // Variable para almacenar los HC estimados por la IA
+
+        // Inicializar la cámara y el modelo de IA
+        async function setupCameraAndModel() {
+            try {
+                // Cargar MobileNet
+                detectionStatus.innerText = "Cargando modelo de IA...";
+                mobileNetModel = await mobilenet.load();
+                detectionStatus.innerText = "Modelo de IA cargado.";
+
+                // Iniciar cámara
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                webcam.srcObject = stream;
+                detectionStatus.innerText = "Cámara lista. Enfoca tu plato y pulsa 'Detectar Plato'.";
+            } catch (error) {
+                console.error("Error al iniciar cámara o cargar modelo:", error);
+                detectionStatus.innerText = "Error: No se pudo iniciar la cámara o cargar el modelo. (Puede que necesites HTTPS o permisos)";
+                captureButton.disabled = true;
+            }
+        }
+
+        // Función para capturar imagen y detectar alimentos
+        captureButton.addEventListener('click', async () => {
+            if (!mobileNetModel) {
+                alert("El modelo de IA no está cargado aún. Por favor, espera.");
+                return;
+            }
+            if (!webcam.srcObject) {
+                alert("La cámara no está activa. Recarga la página y acepta los permisos.");
+                return;
+            }
+
+            detectionStatus.innerText = "Analizando plato...";
+            estimatedHC = 0; // Resetear HC estimados
+
+            // Realizar predicciones
+            const predictions = await mobileNetModel.classify(webcam);
+            
+            let detectedFoodName = "Desconocido";
+            let foundFood = null;
+
+            if (predictions.length > 0) {
+                // Iterar sobre las predicciones para encontrar una coincidencia en nuestra base de datos
+                for (const prediction of predictions) {
+                    const label = prediction.className.toLowerCase();
+                    foundFood = foodDatabase.find(food =>
+                        food.keywords.some(keyword => label.includes(keyword))
+                    );
+                    if (foundFood) {
+                        detectedFoodName = foundFood.name;
+                        break; // Se encontró una coincidencia, salir del bucle
+                    }
+                }
+            }
+
+            detectionStatus.innerText = `Detectado: ${detectedFoodName} (Confianza: ${predictions.length > 0 ? (predictions[0].probability * 100).toFixed(1) : 0}%)`;
+
+            if (foundFood) {
+                // Estimar HC basados en el alimento detectado y el peso predefinido
+                estimatedHC = (foundFood.hc_100g * foundFood.peso_estimado_g) / 100;
+                hcValueSpan.innerText = estimatedHC.toFixed(0);
+                estimatedHcDisplay.classList.remove('hidden');
+                // Auto-rellenar el campo de gramos de HC
+                document.getElementById('glucemia').focus(); // Poner el foco en la glucemia para el siguiente paso
+                // Mostrar alerta de seguridad
+                alert(`He detectado "${foundFood.name}". Estimo ${estimatedHC.toFixed(0)}g de HC para un peso de ${foundFood.peso_estimado_g}g. Por favor, revisa esta estimación antes de calcular.`);
+            } else {
+                estimatedHcDisplay.classList.add('hidden');
+                hcValueSpan.innerText = 0;
+                alert("No he podido identificar un alimento de mi lista. Por favor, introduce los gramos de HC manualmente.");
+            }
+        });
+
+
+        // --- LÓGICA DE CÁLCULO DE INSULINA ---
         function calcularDosis() {
             // Captura de datos
             const dti = parseFloat(document.getElementById('dti').value);
             const objetivo = parseFloat(document.getElementById('objetivo').value);
             const glucemia = parseFloat(document.getElementById('glucemia').value);
-            const gramos = parseFloat(document.getElementById('gramos').value);
-
-            if (!dti || !glucemia || isNaN(gramos)) {
-                alert("Por favor, introduce los datos necesarios.");
+            // Si la IA ha estimado HC, se usan esos. Si no, se puede dejar el campo manual o pedir que el usuario lo rellene.
+            const gramos = estimatedHC > 0 ? estimatedHC : parseFloat(document.getElementById('gramos').value || 0);
+            
+            if (!dti || !glucemia || isNaN(gramos) || gramos <= 0) {
+                alert("Por favor, introduce tu glucemia, asegúrate que el DTI es correcto y que hay HC (detectados o manuales) para calcular.");
                 return;
             }
 
@@ -111,7 +259,7 @@
 
             // 3. Ratio Insulina/Ración - Regla 500
             // Cuántas unidades se necesitan por cada ración (10g)
-            // (10 / (500 / DTI))
+            // Fórmula: (10 / (500 / DTI))
             const uiPorRacion = 10 / (500 / dti);
 
             // 4. Cálculos de Bolo
@@ -139,11 +287,14 @@
                 alertaHipo.classList.add('hidden');
             }
 
-            // Límite de seguridad para evitar errores de escritura
+            // Límite de seguridad para evitar errores de escritura o IA
             if (total > 15) {
-                alert("⚠️ AVISO: El cálculo supera las 15 unidades. Revisa si has puesto bien los gramos de Hidratos de Carbono.");
+                alert("⚠️ AVISO DE SEGURIDAD: El cálculo supera las 15 unidades. Revisa si la estimación de HC es correcta.");
             }
         }
+
+        // Inicializar la aplicación cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', setupCameraAndModel);
     </script>
 </body>
 </html>
