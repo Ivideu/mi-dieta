@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan Nutricional 30 Días - Iván (DM1 & Recomposición)</title>
+    <style>
+        :root {
+            --primary: #0d9488;
+            --primary-dark: #0f766e;
+            --bg: #f0fdf4;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --text-muted: #475569;
+            --border: #e2e8f0;
+            --accent: #14b8a6;
+            --warning: #d97706;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0f766e, #0284c7);
+            color: white;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            margin: 0 0 8px 0;
+            font-size: 1.8rem;
+        }
+
+        header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            color: var(--primary-dark);
+            border-bottom: 2px solid #ccfbf1;
+            padding-bottom: 8px;
+            font-size: 1.3rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .stat-box {
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .stat-box span {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .stat-box strong {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .checkbox-col {
+            width: 40px;
+            text-align: center;
+        }
+
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        tr.completed {
+            background-color: #f0fdf4;
+            opacity: 0.65;
+            text-decoration: line-through;
+        }
+
+        .week-title {
+            background-color: #e6fffa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin-top: 20px;
+        }
+
+        .grocery-category {
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin-top: 15px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
+        }
+
+        .grocery-list {
+            columns: 2;
+            padding-left: 20px;
+        }
+
+        .btn-reset {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        @media(max-width: 600px) {
+            .grocery-list { columns: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Plan Nutricional de 30 Días - Iván</h1>
+            <p><strong>Objetivo:</strong> Pérdida de Grasa (88kg → 78kg) + Protección Articular + Control Glucémico DM1</p>
+            <p><strong>Pauta Macronutrientes Aprox:</strong> ~1800 - 1900 kcal | 150g Proteína | 150g HC (Bajo IG) | 60g Grasas Saludables</p>
+        </header>
+
+        <div class="card">
+            <h2>Estrategia Dietética Clínico-Deportiva (DM1)</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <span>Proteína Diaria</span>
+                    <strong>~1.7g / kg (~150g)</strong>
+                </div>
+                <div class="stat-box">
+                    <span>Estructura HC</span>
+                    <strong>Bajo Índice Glucémico</strong>
+                </div>
+                <div class="stat-box">
+                    <span>Antiinflamatorio</span>
+                    <strong>Omega-3 + Polifenoles</strong>
+                </div>
+                <div class="stat-box">
+                    <span>Fibra Diaria</span>
+                    <strong>> 35g / día</strong>
+                </div>
+            </div>
+            <ul>
+                <li><strong>Desayunos:</strong> Ricos en proteína y grasa saludable con carbohidratos de liberación lenta para evitar picos matutinos por fenómeno del alba.</li>
+                <li><strong>Comidas:</strong> Estructura de plato único (50% verdura/hortaliza, 25% proteína magra, 25% carbohidrato complejo integral).</li>
+                <li><strong>Cenas:</strong> Ligeras, ajustadas en carbohidratos para minimizar el riesgo de hipoglucemia o hiperglucemia nocturna.</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>Menú Diario Interactivo (Días 1 al 30)</h2>
+            <p>Haz clic en las casillas según vayas cumpliendo los días para llevar un registro continuo.</p>
+            
+            <table id="table-diet">
+                <thead>
+                    <tr>
+                        <th class="checkbox-col">OK</th>
+                        <th>Día</th>
+                        <th>Desayuno</th>
+                        <th>Comida</th>
+                        <th>Cena</th>
+                    </tr>
+                </thead>
+                <tbody id="diet-rows">
+                    <!-- Javascript populates 30 days dynamically -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>Listado General de la Compra (Mensual / Recurrente)</h2>
+            <p>Usa esta lista de verificación para organizar las compras en el supermercado.</p>
+            
+            <div class="grocery-category">Proteínas Magras & Pescados</div>
+            <ul class="grocery-list">
+                <li><input type="checkbox" id="g1" onchange="saveState()"> Pechuga de pollo y pavo fresca</li>
+                <li><input type="checkbox" id="g2" onchange="saveState()"> Salmón fresco / Lomo de atún</li>
+                <li><input type="checkbox" id="g3" onchange="saveState()"> Merluza, bacalao, lenguado, lubricante</li>
+                <li><input type="checkbox" id="g4" onchange="saveState()"> Huevos camperos (Clase M/L)</li>
+                <li><input type="checkbox" id="g5" onchange="saveState()"> Latas de atún al natural o en aceite de oliva</li>
+                <li><input type="checkbox" id="g6" onchange="saveState()"> Queso fresco batido 0% / Yogur griego natural sin azúcar</li>
+                <li><input type="checkbox" id="g7" onchange="saveState()"> Tofu firme o Seitán (opcional alternancia)</li>
+            </ul>
+
+            <div class="grocery-category">Carbohidratos de Bajo Índice Glucémico & Legumbres</div>
+            <ul class="grocery-list">
+                <li><input type="checkbox" id="g8" onchange="saveState()"> Avena integral en copos</li>
+                <li><input type="checkbox" id="g9" onchange="saveState()"> Arroz integral / Arroz salvaje</li>
+                <li><input type="checkbox" id="g10" onchange="saveState()"> Quinoa real</li>
+                <li><input type="checkbox" id="g11" onchange="saveState()"> Pan 100% integral de grano entero o centeno</li>
+                <li><input type="checkbox" id="g12" onchange="saveState()"> Lentejas cocidas en bote / Garbanzos</li>
+                <li><input type="checkbox" id="g13" onchange="saveState()"> Boniato / Patatas pequeñas</li>
+            </ul>
+
+            <div class="grocery-category">Verduras, Hortalizas & Frutas Antiinflamatorias</div>
+            <ul class="grocery-list">
+                <li><input type="checkbox" id="g14" onchange="saveState()"> Brócoli, espinacas, calabacín, espárragos</li>
+                <li><input type="checkbox" id="g15" onchange="saveState()"> Pimientos (rojo, verde, amarillo)</li>
+                <li><input type="checkbox" id="g16" onchange="saveState()"> Zanahorias, cebollas, ajos, tomate</li>
+                <li><input type="checkbox" id="g17" onchange="saveState()"> Frutos rojos (arándanos, frambuesas, moras)</li>
+                <li><input type="checkbox" id="g18" onchange="saveState()"> Manzanas verdes, fresas, aguacates</li>
+            </ul>
+
+            <div class="grocery-category">Grasas Saludables & Complementos Diabetes</div>
+            <ul class="grocery-list">
+                <li><input type="checkbox" id="g19" onchange="saveState()"> Aceite de Oliva Virgen Extra (AOVE)</li>
+                <li><input type="checkbox" id="g20" onchange="saveState()"> Nueces, almendras crudas, avellanas</li>
+                <li><input type="checkbox" id="g21" onchange="saveState()"> Semillas de chía y lino molido (Omega-3)</li>
+                <li><input type="checkbox" id="g22" onchange="saveState()"> Canela en polvo (mejora sensibilidad insulina)</li>
+            </ul>
+        </div>
+
+        <button class="btn-reset" onclick="resetCheckboxes('diet_state')">Reiniciar Marcadores Nutrición</button>
+    </div>
+
+    <script>
+        const dayMenuTemplates = [
+            {
+                des: "Revuelto de 2 huevos con espinacas y 1 rebanada de pan 100% integral de centeno con AOVE + Café/Té con canela.",
+                com: "Pechuga de pollo a la plancha (180g) con 150g de quinoa cocida y ensalada grande de canónigos, tomate y aguacate.",
+                cen: "Lomo de merluza al horno (200g) con espárragos trigueros y calabacín a la plancha."
+            },
+            {
+                des: "Yogur griego natural (200g) con 30g de copos de avena integral, 1 puñado de arándanos y 10g de semillas de chía.",
+                com: "Lentejas guisadas con verduras (zanahoria, pimiento, calabacín) y 120g de taco de pechuga de pavo.",
+                cen: "Tortilla de 2 huevos con champiñones + ensalada verde de pepino y rúcula con AOVE."
+            },
+            {
+                des: "Porridge de avena cocida con bebida vegetal sin azúcar, canela en polvo, 1/2 manzana picada y 4 nueces.",
+                com: "Salmón a la plancha (170g) con 1 patata pequeña asada (100g) y brócoli al vapor con limón y AOVE.",
+                cen: "Pavo a la plancha (150g) con picadillo de tomate, pimiento verde y cebolla condimentado con orégano y AOVE."
+            },
+            {
+                des: "Tostada integral con queso fresco batido 0%, láminas de aguacate (30g) y 2 lonchas de jamón cocido extra.",
+                com: "Garbanzos salteados con espinacas y 150g de bacalao desmigado.",
+                cen: "Crema de calabacín y puerro sin nata + Pechuga de pollo a la plancha (150g)."
+            },
+            {
+                des: "Omelette de 2 claras y 1 huevo entero con pimientos picados + 1 manzana verde pequeñas.",
+                com: "Atún fresco o en lata al natural (150g) en ensalada grande de arroz integral (100g cocido), canónigos y aceitunas.",
+                cen: "Lenguado a la plancha (200g) con salteado de verduras variadas."
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            build30Days();
+            loadState();
+        });
+
+        function build30Days() {
+            const tbody = document.getElementById('diet-rows');
+            let html = '';
+            for (let i = 1; i <= 30; i++) {
+                const tpl = dayMenuTemplates[(i - 1) % dayMenuTemplates.length];
+                html += `
+                    <tr>
+                        <td class="checkbox-col"><input type="checkbox" id="diet_d${i}" onchange="toggleRow(this)"></td>
+                        <td><strong>Día ${i}</strong></td>
+                        <td>${tpl.des}</td>
+                        <td>${tpl.com}</td>
+                        <td>${tpl.cen}</td>
+                    </tr>
+                `;
+            }
+            tbody.innerHTML = html;
+        }
+
+        function toggleRow(checkbox) {
+            const tr = checkbox.closest('tr');
+            if (tr) {
+                if (checkbox.checked) {
+                    tr.classList.add('completed');
+                } else {
+                    tr.classList.remove('completed');
+                }
+            }
+            saveState();
+        }
+
+        function saveState() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const state = {};
+            checkboxes.forEach(cb => {
+                if (cb.id) state[cb.id] = cb.checked;
+            });
+            localStorage.setItem('diet_state', JSON.stringify(state));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('diet_state');
+            if (!saved) return;
+            const state = JSON.parse(saved);
+            Object.keys(state).forEach(id => {
+                const cb = document.getElementById(id);
+                if (cb) {
+                    cb.checked = state[id];
+                    toggleRow(cb);
+                }
+            });
+        }
+
+        function resetCheckboxes(key) {
+            if (confirm('¿Quieres reiniciar todos los marcadores de la dieta?')) {
+                localStorage.removeItem(key);
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
