@@ -232,21 +232,17 @@
             <ul class="grocery-list">
                 <li><input type="checkbox" id="g1" onchange="saveState()"> Pechuga de pollo y pavo fresca</li>
                 <li><input type="checkbox" id="g2" onchange="saveState()"> Salmón fresco / Lomo de atún</li>
-                <li><input type="checkbox" id="g3" onchange="saveState()"> Merluza, bacalao, lenguado, lubricante</li>
+                <li><input type="checkbox" id="g3" onchange="saveState()"> Merluza, bacalao, lenguado, lubina o dorada</li>
                 <li><input type="checkbox" id="g4" onchange="saveState()"> Huevos camperos (Clase M/L)</li>
                 <li><input type="checkbox" id="g5" onchange="saveState()"> Latas de atún al natural o en aceite de oliva</li>
                 <li><input type="checkbox" id="g6" onchange="saveState()"> Queso fresco batido 0% / Yogur griego natural sin azúcar</li>
-                <li><input type="checkbox" id="g7" onchange="saveState()"> Tofu firme o Seitán (opcional alternancia)</li>
-            </ul>
+                            </ul>
 
             <div class="grocery-category">Carbohidratos de Bajo Índice Glucémico & Legumbres</div>
             <ul class="grocery-list">
                 <li><input type="checkbox" id="g8" onchange="saveState()"> Avena integral en copos</li>
-                <li><input type="checkbox" id="g9" onchange="saveState()"> Arroz integral / Arroz salvaje</li>
-                <li><input type="checkbox" id="g10" onchange="saveState()"> Quinoa real</li>
-                <li><input type="checkbox" id="g11" onchange="saveState()"> Pan 100% integral de grano entero o centeno</li>
-                <li><input type="checkbox" id="g12" onchange="saveState()"> Lentejas cocidas en bote / Garbanzos</li>
-                <li><input type="checkbox" id="g13" onchange="saveState()"> Boniato / Patatas pequeñas</li>
+                                                <li><input type="checkbox" id="g11" onchange="saveState()"> Pan 100% integral de grano entero o centeno</li>
+                                <li><input type="checkbox" id="g13" onchange="saveState()"> Boniato / Patatas pequeñas</li>
             </ul>
 
             <div class="grocery-category">Verduras, Hortalizas & Frutas Antiinflamatorias</div>
@@ -254,16 +250,14 @@
                 <li><input type="checkbox" id="g14" onchange="saveState()"> Brócoli, espinacas, calabacín, espárragos</li>
                 <li><input type="checkbox" id="g15" onchange="saveState()"> Pimientos (rojo, verde, amarillo)</li>
                 <li><input type="checkbox" id="g16" onchange="saveState()"> Zanahorias, cebollas, ajos, tomate</li>
-                <li><input type="checkbox" id="g17" onchange="saveState()"> Frutos rojos (arándanos, frambuesas, moras)</li>
-                <li><input type="checkbox" id="g18" onchange="saveState()"> Manzanas verdes, fresas, aguacates</li>
+                                <li><input type="checkbox" id="g18" onchange="saveState()"> Manzanas verdes, fresas, aguacates</li>
             </ul>
 
             <div class="grocery-category">Grasas Saludables & Complementos Diabetes</div>
             <ul class="grocery-list">
                 <li><input type="checkbox" id="g19" onchange="saveState()"> Aceite de Oliva Virgen Extra (AOVE)</li>
                 <li><input type="checkbox" id="g20" onchange="saveState()"> Nueces, almendras crudas, avellanas</li>
-                <li><input type="checkbox" id="g21" onchange="saveState()"> Semillas de chía y lino molido (Omega-3)</li>
-                <li><input type="checkbox" id="g22" onchange="saveState()"> Canela en polvo (mejora sensibilidad insulina)</li>
+                                <li><input type="checkbox" id="g22" onchange="saveState()"> Canela en polvo (mejora sensibilidad insulina)</li>
             </ul>
         </div>
 
@@ -274,12 +268,12 @@
         const dayMenuTemplates = [
             {
                 des: "Revuelto de 2 huevos con espinacas y 1 rebanada de pan 100% integral de centeno con AOVE + Café/Té con canela.",
-                com: "Pechuga de pollo a la plancha (180g) con 150g de quinoa cocida y ensalada grande de canónigos, tomate y aguacate.",
+                com: "Pechuga de pollo a la plancha (180g) con 150g de patata cocida y ensalada grande de canónigos, tomate y aguacate.",
                 cen: "Lomo de merluza al horno (200g) con espárragos trigueros y calabacín a la plancha."
             },
             {
-                des: "Yogur griego natural (200g) con 30g de copos de avena integral, 1 puñado de arándanos y 10g de semillas de chía.",
-                com: "Lentejas guisadas con verduras (zanahoria, pimiento, calabacín) y 120g de taco de pechuga de pavo.",
+                des: "Yogur griego natural (200g) con 30g de copos de avena integral, 1 puñado de fresas picadas.",
+                com: "Pavo a la plancha (150g) con menestra de verduras al vapor y 100g de patata cocida.",
                 cen: "Tortilla de 2 huevos con champiñones + ensalada verde de pepino y rúcula con AOVE."
             },
             {
@@ -289,12 +283,12 @@
             },
             {
                 des: "Tostada integral con queso fresco batido 0%, láminas de aguacate (30g) y 2 lonchas de jamón cocido extra.",
-                com: "Garbanzos salteados con espinacas y 150g de bacalao desmigado.",
+                com: "Bacalao a la plancha (180g) salteado con espinacas y piñones con 1 rebanada de pan integral de centeno.",
                 cen: "Crema de calabacín y puerro sin nata + Pechuga de pollo a la plancha (150g)."
             },
             {
                 des: "Omelette de 2 claras y 1 huevo entero con pimientos picados + 1 manzana verde pequeñas.",
-                com: "Atún fresco o en lata al natural (150g) en ensalada grande de arroz integral (100g cocido), canónigos y aceitunas.",
+                com: "Atún fresco o en lata al natural (150g) en ensalada grande con canónigos, tomate, aguacate, aceitunas y 100g de boniato asado.",
                 cen: "Lenguado a la plancha (200g) con salteado de verduras variadas."
             }
         ];
