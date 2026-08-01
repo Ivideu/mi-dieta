@@ -1,237 +1,77 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GlucoCalc Ultra - DB 2026</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #020617; color: #f8fafc; }
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        .food-item:active { transform: scale(0.98); background-color: #1e293b; }
-        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mi Plan Fitness</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      font-family: system-ui, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 30px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .card {
+      padding: 20px;
+      border-radius: 16px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      transition: transform .2s, box-shadow .2s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+
+    .emoji {
+      font-size: 2rem;
+    }
+
+    .title {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+  </style>
 </head>
-<body class="p-4 pb-20">
 
-    <div class="max-w-xl mx-auto space-y-6">
-        
-        <header class="flex justify-between items-center p-4 glass rounded-3xl">
-            <div>
-                <h1 class="text-2xl font-black text-white italic tracking-tighter">ULTRA<span class="text-blue-500">DB</span></h1>
-                <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Ratio: 7.5 | FSI: 33.3</p>
-            </div>
-            <div class="text-right">
-                <span class="bg-green-500/10 text-green-500 text-[10px] font-black px-3 py-1 rounded-full border border-green-500/20">DB SINCRONIZADA</span>
-            </div>
-        </header>
+<body>
 
-        <div class="relative">
-            <input type="text" id="db-search" oninput="searchInThousands()" placeholder="Busca cualquier plato (Ej: Paella, Lasaña...)" 
-                class="w-full bg-slate-900 border-2 border-slate-800 rounded-3xl py-6 px-6 text-xl font-bold text-white outline-none focus:border-blue-500 shadow-2xl transition-all">
-            
-            <div id="results-container" class="hidden absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-3xl max-h-96 overflow-y-auto z-50 shadow-2xl custom-scroll">
-                </div>
-        </div>
+  <h1>Mi Plan Fitness</h1>
 
-        <div class="glass p-6 rounded-[2.5rem]">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Alimentos Seleccionados</h2>
-                <span id="items-count" class="text-[10px] bg-blue-500 text-white px-2 py-0.5 rounded-full font-bold">0</span>
-            </div>
-            
-            <div id="plate-list" class="space-y-3 min-h-[80px]">
-                <div class="text-center py-6 opacity-30 italic text-sm">El plato está vacío</div>
-            </div>
+  <div class="grid">
+    <a class="card" href="ejercicios.html">
+      <span class="emoji">💪</span>
+      <span class="title">Rutina de ejercicios</span>
+    </a>
 
-            <div class="mt-8 pt-6 border-t border-slate-800/50 flex justify-between items-end">
-                <div>
-                    <p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Total Hidratos</p>
-                    <p id="total-hc" class="text-5xl font-black text-white">0<span class="text-xl text-slate-600 ml-1">g</span></p>
-                </div>
-                <button onclick="resetAll()" class="text-[10px] font-bold text-slate-500 hover:text-red-400 uppercase tracking-tighter">Limpiar todo</button>
-            </div>
-        </div>
+    <a class="card" href="dieta.html">
+      <span class="emoji">🍽️</span>
+      <span class="title">Plan de alimentación</span>
+    </a>
+  </div>
 
-        <div class="bg-blue-600 p-8 rounded-[3rem] shadow-2xl">
-            <div class="space-y-6">
-                <div class="flex gap-4 items-end">
-                    <div class="flex-1">
-                        <label class="text-[10px] font-bold text-blue-200 uppercase ml-2 mb-2 block tracking-widest">Glucemia mg/dL</label>
-                        <input type="number" id="glucose-input" placeholder="000" 
-                            class="w-full bg-blue-700 border-none rounded-2xl p-5 text-4xl font-black text-white outline-none placeholder-blue-400 shadow-inner">
-                    </div>
-                    <button onclick="calculate()" class="bg-white text-blue-700 h-20 px-10 rounded-2xl font-black uppercase text-xs shadow-xl active:scale-95 transition-all">Calcular</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-result" class="hidden fixed inset-0 z-[100] bg-slate-950/98 flex items-center justify-center p-6 backdrop-blur-xl">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-[4rem] p-12 text-center shadow-2xl">
-            <p class="text-slate-500 text-[10px] font-black uppercase mb-10 tracking-[0.5em]">Dosis Total</p>
-            
-            <div class="relative inline-block mb-10">
-                <p id="final-units" class="text-[11rem] font-black text-white leading-none tracking-tighter">0.0</p>
-                <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 px-4 py-1 rounded-full text-xs font-black uppercase">Unidades</div>
-            </div>
-
-            <div class="bg-slate-950/50 rounded-3xl p-6 border border-slate-800 space-y-3">
-                <div class="flex justify-between text-[10px] font-bold uppercase">
-                    <span class="text-slate-500">Por Comida</span>
-                    <span id="breakdown-food" class="text-white">0.0 UI</span>
-                </div>
-                <div class="flex justify-between text-[10px] font-bold uppercase">
-                    <span class="text-slate-500">Corrección</span>
-                    <span id="breakdown-corr" class="text-white">0.0 UI</span>
-                </div>
-            </div>
-
-            <button onclick="closeResult()" class="mt-10 w-full bg-white text-slate-950 py-6 rounded-3xl font-black uppercase tracking-widest hover:bg-blue-50 transition-colors">Confirmar Bolo</button>
-        </div>
-    </div>
-
-    <script>
-        const RATIO = 7.5;
-        const FSI = 33.3;
-        const TARGET = 120;
-
-        // BASE DE DATOS MASIVA (Estructura expandible a miles)
-        const DATABASE = [
-            // PASTAS Y ARROCES
-            { n: "Espaguetis Carbonara", hc: 60, cat: "Pasta" },
-            { n: "Lasaña de Carne", hc: 45, cat: "Pasta" },
-            { n: "Macarrones con Tomate", hc: 55, cat: "Pasta" },
-            { n: "Paella de Marisco", hc: 50, cat: "Arroz" },
-            { n: "Arroz a la Cubana", hc: 65, cat: "Arroz" },
-            { n: "Risotto de Setas", hc: 45, cat: "Arroz" },
-            { n: "Tallarines Chinos", hc: 50, cat: "Pasta" },
-            { n: "Tortellini de Queso", hc: 48, cat: "Pasta" },
-            
-            // FAST FOOD & PAN
-            { n: "Pizza Pepperoni", hc: 70, cat: "Pizza" },
-            { n: "Hamburguesa Completa", hc: 45, cat: "Burger" },
-            { n: "Patatas Fritas Ración", hc: 45, cat: "Fritos" },
-            { n: "Nuggets de Pollo (6u)", hc: 20, cat: "Fritos" },
-            { n: "Sándwich Mixto", hc: 30, cat: "Pan" },
-            { n: "Bocadillo de Jamón", hc: 50, cat: "Pan" },
-            { n: "Kebab Completo", hc: 60, cat: "FastFood" },
-            
-            // GUISOS Y LEGUMBRES
-            { n: "Lentejas Estofadas", hc: 35, cat: "Legumbres" },
-            { n: "Garbanzos con Espinacas", hc: 30, cat: "Legumbres" },
-            { n: "Fabada Asturiana", hc: 40, cat: "Legumbres" },
-            { n: "Puré de Patatas", hc: 25, cat: "Verdura" },
-            { n: "Crema de Calabacín", hc: 10, cat: "Verdura" },
-            
-            // POSTRES Y FRUTAS
-            { n: "Tarta de Queso", hc: 35, cat: "Dulce" },
-            { n: "Brownie con Helado", hc: 60, cat: "Dulce" },
-            { n: "Manzana Mediana", hc: 18, cat: "Fruta" },
-            { n: "Plátano", hc: 24, cat: "Fruta" },
-            { n: "Yogur Desnatado", hc: 6, cat: "Lácteo" },
-            { n: "Natillas", hc: 25, cat: "Dulce" },
-            { n: "Croissant", hc: 28, cat: "Dulce" },
-            { n: "Donut Glaseado", hc: 32, cat: "Dulce" }
-        ];
-
-        let selectedPlate = [];
-
-        function searchInThousands() {
-            const query = document.getElementById('db-search').value.toLowerCase();
-            const container = document.getElementById('results-container');
-            
-            if (query.length < 1) { container.classList.add('hidden'); return; }
-
-            const matches = DATABASE.filter(item => item.n.toLowerCase().includes(query));
-            
-            if (matches.length > 0) {
-                container.innerHTML = matches.map((item, index) => `
-                    <div onclick="addToPlate('${item.n}', ${item.hc})" class="food-item p-5 border-b border-slate-800 flex justify-between items-center cursor-pointer hover:bg-slate-800 transition-all">
-                        <div>
-                            <p class="text-white font-bold text-sm uppercase">${item.n}</p>
-                            <p class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">${item.cat}</p>
-                        </div>
-                        <span class="text-blue-400 font-black text-lg">${item.hc}g</span>
-                    </div>
-                `).join('');
-                container.classList.remove('hidden');
-            } else {
-                container.classList.add('hidden');
-            }
-        }
-
-        function addToPlate(name, hc) {
-            selectedPlate.push({ name, hc, id: Date.now() });
-            document.getElementById('db-search').value = "";
-            document.getElementById('results-container').classList.add('hidden');
-            updateUI();
-        }
-
-        function removeFromPlate(id) {
-            selectedPlate = selectedPlate.filter(item => item.id !== id);
-            updateUI();
-        }
-
-        function updateUI() {
-            const list = document.getElementById('plate-list');
-            const itemsCount = document.getElementById('items-count');
-            let total = 0;
-
-            if (selectedPlate.length === 0) {
-                list.innerHTML = `<div class="text-center py-6 opacity-30 italic text-sm">El plato está vacío</div>`;
-                itemsCount.innerText = "0";
-            } else {
-                list.innerHTML = selectedPlate.map(item => {
-                    total += item.hc;
-                    return `
-                        <div class="flex justify-between items-center bg-slate-900/80 p-4 rounded-2xl border border-slate-800 animate-in slide-in-from-bottom-2">
-                            <div>
-                                <p class="text-[11px] font-black text-white uppercase">${item.name}</p>
-                                <p class="text-[10px] text-blue-400 font-black">${item.hc}g HC</p>
-                            </div>
-                            <button onclick="removeFromPlate(${item.id})" class="w-8 h-8 rounded-full flex items-center justify-center text-slate-600 hover:text-red-400 transition-colors font-bold">✕</button>
-                        </div>
-                    `;
-                }).join('');
-                itemsCount.innerText = selectedPlate.length;
-            }
-            document.getElementById('total-hc').innerHTML = `${total}<span class="text-xl text-slate-600 ml-1">g</span>`;
-            window.currentHC = total;
-        }
-
-        function calculate() {
-            const glu = parseFloat(document.getElementById('glucose-input').value);
-            if (!glu) return alert("Por favor, introduce tu glucemia");
-
-            const hc = window.currentHC || 0;
-            const uFood = hc / RATIO;
-            const uCorr = glu > TARGET ? (glu - TARGET) / FSI : 0;
-            const total = uFood + uCorr;
-
-            // Redondeo a la media unidad más cercana
-            const rounded = Math.round(total * 2) / 2;
-
-            document.getElementById('final-units').innerText = rounded.toFixed(1);
-            document.getElementById('breakdown-food').innerText = uFood.toFixed(1) + " UI";
-            document.getElementById('breakdown-corr').innerText = uCorr.toFixed(1) + " UI";
-            document.getElementById('modal-result').classList.remove('hidden');
-        }
-
-        function resetAll() {
-            selectedPlate = [];
-            document.getElementById('glucose-input').value = "";
-            updateUI();
-        }
-
-        function closeResult() {
-            document.getElementById('modal-result').classList.add('hidden');
-            resetAll();
-        }
-
-        function closeModal() { document.getElementById('modal-result').classList.add('hidden'); }
-    </script>
 </body>
 </html>
